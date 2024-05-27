@@ -9,10 +9,9 @@
 #include "rxe.h"
 #include "rxe_loc.h"
 
-/* check that QP matches packet opcode type and is in a valid state */
+ /* check that QP matches packet opcode type and is in a valid state */
 static int check_type_state(struct rxe_dev *rxe, struct rxe_pkt_info *pkt,
-			    struct rxe_qp *qp)
-{
+	struct rxe_qp *qp) {
 	unsigned int pkt_type;
 
 	if (unlikely(!qp->valid))
@@ -50,7 +49,7 @@ static int check_type_state(struct rxe_dev *rxe, struct rxe_pkt_info *pkt,
 		if (unlikely(qp->resp.state != QP_STATE_READY))
 			goto err1;
 	} else if (unlikely(qp->req.state < QP_STATE_READY ||
-				qp->req.state > QP_STATE_DRAINED)) {
+		qp->req.state > QP_STATE_DRAINED)) {
 		goto err1;
 	}
 
@@ -60,25 +59,22 @@ err1:
 	return -EINVAL;
 }
 
-static void set_bad_pkey_cntr(struct rxe_port *port)
-{
+static void set_bad_pkey_cntr(struct rxe_port *port) {
 	spin_lock_bh(&port->port_lock);
 	port->attr.bad_pkey_cntr = min((u32)0xffff,
-				       port->attr.bad_pkey_cntr + 1);
+		port->attr.bad_pkey_cntr + 1);
 	spin_unlock_bh(&port->port_lock);
 }
 
-static void set_qkey_viol_cntr(struct rxe_port *port)
-{
+static void set_qkey_viol_cntr(struct rxe_port *port) {
 	spin_lock_bh(&port->port_lock);
 	port->attr.qkey_viol_cntr = min((u32)0xffff,
-					port->attr.qkey_viol_cntr + 1);
+		port->attr.qkey_viol_cntr + 1);
 	spin_unlock_bh(&port->port_lock);
 }
 
 static int check_keys(struct rxe_dev *rxe, struct rxe_pkt_info *pkt,
-		      u32 qpn, struct rxe_qp *qp)
-{
+	u32 qpn, struct rxe_qp *qp) {
 	struct rxe_port *port = &rxe->port;
 	u16 pkey = bth_pkey(pkt);
 
@@ -95,7 +91,7 @@ static int check_keys(struct rxe_dev *rxe, struct rxe_pkt_info *pkt,
 
 		if (unlikely(deth_qkey(pkt) != qkey)) {
 			pr_warn_ratelimited("bad qkey, got 0x%x expected 0x%x for qpn 0x%x\n",
-					    deth_qkey(pkt), qkey, qpn);
+				deth_qkey(pkt), qkey, qpn);
 			set_qkey_viol_cntr(port);
 			goto err1;
 		}
@@ -108,8 +104,7 @@ err1:
 }
 
 static int check_addr(struct rxe_dev *rxe, struct rxe_pkt_info *pkt,
-		      struct rxe_qp *qp)
-{
+	struct rxe_qp *qp) {
 	struct sk_buff *skb = PKT_TO_SKB(pkt);
 
 	if (qp_type(qp) != IB_QPT_RC && qp_type(qp) != IB_QPT_UC)
@@ -117,7 +112,7 @@ static int check_addr(struct rxe_dev *rxe, struct rxe_pkt_info *pkt,
 
 	if (unlikely(pkt->port_num != qp->attr.port_num)) {
 		pr_warn_ratelimited("port %d != qp port %d\n",
-				    pkt->port_num, qp->attr.port_num);
+			pkt->port_num, qp->attr.port_num);
 		goto err1;
 	}
 
@@ -129,15 +124,15 @@ static int check_addr(struct rxe_dev *rxe, struct rxe_pkt_info *pkt,
 
 		if (ip_hdr(skb)->daddr != saddr->s_addr) {
 			pr_warn_ratelimited("dst addr %pI4 != qp source addr %pI4\n",
-					    &ip_hdr(skb)->daddr,
-					    &saddr->s_addr);
+				&ip_hdr(skb)->daddr,
+				&saddr->s_addr);
 			goto err1;
 		}
 
 		if (ip_hdr(skb)->saddr != daddr->s_addr) {
 			pr_warn_ratelimited("source addr %pI4 != qp dst addr %pI4\n",
-					    &ip_hdr(skb)->saddr,
-					    &daddr->s_addr);
+				&ip_hdr(skb)->saddr,
+				&daddr->s_addr);
 			goto err1;
 		}
 
@@ -149,13 +144,13 @@ static int check_addr(struct rxe_dev *rxe, struct rxe_pkt_info *pkt,
 
 		if (memcmp(&ipv6_hdr(skb)->daddr, saddr, sizeof(*saddr))) {
 			pr_warn_ratelimited("dst addr %pI6 != qp source addr %pI6\n",
-					    &ipv6_hdr(skb)->daddr, saddr);
+				&ipv6_hdr(skb)->daddr, saddr);
 			goto err1;
 		}
 
 		if (memcmp(&ipv6_hdr(skb)->saddr, daddr, sizeof(*daddr))) {
 			pr_warn_ratelimited("source addr %pI6 != qp dst addr %pI6\n",
-					    &ipv6_hdr(skb)->saddr, daddr);
+				&ipv6_hdr(skb)->saddr, daddr);
 			goto err1;
 		}
 	}
@@ -167,8 +162,7 @@ err1:
 	return -EINVAL;
 }
 
-static int hdr_check(struct rxe_pkt_info *pkt)
-{
+static int hdr_check(struct rxe_pkt_info *pkt) {
 	struct rxe_dev *rxe = pkt->rxe;
 	struct rxe_port *port = &rxe->port;
 	struct rxe_qp *qp = NULL;
@@ -222,16 +216,14 @@ err1:
 	return -EINVAL;
 }
 
-static inline void rxe_rcv_pkt(struct rxe_pkt_info *pkt, struct sk_buff *skb)
-{
+static inline void rxe_rcv_pkt(struct rxe_pkt_info *pkt, struct sk_buff *skb) {
 	if (pkt->mask & RXE_REQ_MASK)
 		rxe_resp_queue_pkt(pkt->qp, skb);
 	else
 		rxe_comp_queue_pkt(pkt->qp, skb);
 }
 
-static void rxe_rcv_mcast_pkt(struct rxe_dev *rxe, struct sk_buff *skb)
-{
+static void rxe_rcv_mcast_pkt(struct rxe_dev *rxe, struct sk_buff *skb) {
 	struct rxe_pkt_info *pkt = SKB_TO_PKT(skb);
 	struct rxe_mc_grp *mcg;
 	struct rxe_mc_elem *mce;
@@ -241,7 +233,7 @@ static void rxe_rcv_mcast_pkt(struct rxe_dev *rxe, struct sk_buff *skb)
 
 	if (skb->protocol == htons(ETH_P_IP))
 		ipv6_addr_set_v4mapped(ip_hdr(skb)->daddr,
-				       (struct in6_addr *)&dgid);
+			(struct in6_addr *)&dgid);
 	else if (skb->protocol == htons(ETH_P_IPV6))
 		memcpy(&dgid, &ipv6_hdr(skb)->daddr, sizeof(dgid));
 
@@ -324,8 +316,7 @@ drop:
  * Accept if multicast packet
  * Accept if matches an SGID table entry
  */
-static int rxe_chk_dgid(struct rxe_dev *rxe, struct sk_buff *skb)
-{
+static int rxe_chk_dgid(struct rxe_dev *rxe, struct sk_buff *skb) {
 	struct rxe_pkt_info *pkt = SKB_TO_PKT(skb);
 	const struct ib_gid_attr *gid_attr;
 	union ib_gid dgid;
@@ -336,7 +327,7 @@ static int rxe_chk_dgid(struct rxe_dev *rxe, struct sk_buff *skb)
 
 	if (skb->protocol == htons(ETH_P_IP)) {
 		ipv6_addr_set_v4mapped(ip_hdr(skb)->daddr,
-				       (struct in6_addr *)&dgid);
+			(struct in6_addr *)&dgid);
 		pdgid = &dgid;
 	} else {
 		pdgid = (union ib_gid *)&ipv6_hdr(skb)->daddr;
@@ -346,8 +337,8 @@ static int rxe_chk_dgid(struct rxe_dev *rxe, struct sk_buff *skb)
 		return 0;
 
 	gid_attr = rdma_find_gid_by_port(&rxe->ib_dev, pdgid,
-					 IB_GID_TYPE_ROCE_UDP_ENCAP,
-					 1, skb->dev);
+		IB_GID_TYPE_ROCE_UDP_ENCAP,
+		1, skb->dev);
 	if (IS_ERR(gid_attr))
 		return PTR_ERR(gid_attr);
 
@@ -356,8 +347,7 @@ static int rxe_chk_dgid(struct rxe_dev *rxe, struct sk_buff *skb)
 }
 
 /* rxe_rcv is called from the interface driver */
-void rxe_rcv(struct sk_buff *skb)
-{
+void rxe_rcv(struct sk_buff *skb) {
 	int err;
 	struct rxe_pkt_info *pkt = SKB_TO_PKT(skb);
 	struct rxe_dev *rxe = pkt->rxe;

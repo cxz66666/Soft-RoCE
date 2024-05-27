@@ -7,7 +7,7 @@
 #ifndef RXE_QUEUE_H
 #define RXE_QUEUE_H
 
-/* for definition of shared struct rxe_queue_buf */
+ /* for definition of shared struct rxe_queue_buf */
 #include <uapi/rdma/rdma_user_rxe.h>
 
 /* implements a simple circular buffer that can optionally be
@@ -33,7 +33,7 @@
  *   paths just q->type is passed.
  */
 
-/* type of queue */
+ /* type of queue */
 enum queue_type {
 	QUEUE_TYPE_KERNEL,
 	QUEUE_TYPE_TO_USER,
@@ -41,9 +41,9 @@ enum queue_type {
 };
 
 struct rxe_queue {
-	struct rxe_dev		*rxe;
-	struct rxe_queue_buf	*buf;
-	struct rxe_mmap_info	*ip;
+	struct rxe_dev *rxe;
+	struct rxe_queue_buf *buf;
+	struct rxe_mmap_info *ip;
 	size_t			buf_size;
 	size_t			elem_size;
 	unsigned int		log2_elem_size;
@@ -58,31 +58,29 @@ struct rxe_queue {
 };
 
 int do_mmap_info(struct rxe_dev *rxe, struct mminfo __user *outbuf,
-		 struct ib_udata *udata, struct rxe_queue_buf *buf,
-		 size_t buf_size, struct rxe_mmap_info **ip_p);
+	struct ib_udata *udata, struct rxe_queue_buf *buf,
+	size_t buf_size, struct rxe_mmap_info **ip_p);
 
 void rxe_queue_reset(struct rxe_queue *q);
 
 struct rxe_queue *rxe_queue_init(struct rxe_dev *rxe, int *num_elem,
-			unsigned int elem_size, enum queue_type type);
+	unsigned int elem_size, enum queue_type type);
 
 int rxe_queue_resize(struct rxe_queue *q, unsigned int *num_elem_p,
-		     unsigned int elem_size, struct ib_udata *udata,
-		     struct mminfo __user *outbuf,
-		     /* Protect producers while resizing queue */
-		     spinlock_t *producer_lock,
-		     /* Protect consumers while resizing queue */
-		     spinlock_t *consumer_lock);
+	unsigned int elem_size, struct ib_udata *udata,
+	struct mminfo __user *outbuf,
+	/* Protect producers while resizing queue */
+	spinlock_t *producer_lock,
+	/* Protect consumers while resizing queue */
+	spinlock_t *consumer_lock);
 
 void rxe_queue_cleanup(struct rxe_queue *queue);
 
-static inline int next_index(struct rxe_queue *q, int index)
-{
+static inline int next_index(struct rxe_queue *q, int index) {
 	return (index + 1) & q->buf->index_mask;
 }
 
-static inline int queue_empty(struct rxe_queue *q, enum queue_type type)
-{
+static inline int queue_empty(struct rxe_queue *q, enum queue_type type) {
 	u32 prod;
 	u32 cons;
 
@@ -106,8 +104,7 @@ static inline int queue_empty(struct rxe_queue *q, enum queue_type type)
 	return ((prod - cons) & q->index_mask) == 0;
 }
 
-static inline int queue_full(struct rxe_queue *q, enum queue_type type)
-{
+static inline int queue_full(struct rxe_queue *q, enum queue_type type) {
 	u32 prod;
 	u32 cons;
 
@@ -132,8 +129,7 @@ static inline int queue_full(struct rxe_queue *q, enum queue_type type)
 }
 
 static inline unsigned int queue_count(const struct rxe_queue *q,
-					enum queue_type type)
-{
+	enum queue_type type) {
 	u32 prod;
 	u32 cons;
 
@@ -157,8 +153,7 @@ static inline unsigned int queue_count(const struct rxe_queue *q,
 	return (prod - cons) & q->index_mask;
 }
 
-static inline void advance_producer(struct rxe_queue *q, enum queue_type type)
-{
+static inline void advance_producer(struct rxe_queue *q, enum queue_type type) {
 	u32 prod;
 
 	switch (type) {
@@ -182,8 +177,7 @@ static inline void advance_producer(struct rxe_queue *q, enum queue_type type)
 	}
 }
 
-static inline void advance_consumer(struct rxe_queue *q, enum queue_type type)
-{
+static inline void advance_consumer(struct rxe_queue *q, enum queue_type type) {
 	u32 cons;
 
 	switch (type) {
@@ -207,8 +201,7 @@ static inline void advance_consumer(struct rxe_queue *q, enum queue_type type)
 	}
 }
 
-static inline void *producer_addr(struct rxe_queue *q, enum queue_type type)
-{
+static inline void *producer_addr(struct rxe_queue *q, enum queue_type type) {
 	u32 prod;
 
 	switch (type) {
@@ -228,8 +221,7 @@ static inline void *producer_addr(struct rxe_queue *q, enum queue_type type)
 	return q->buf->data + (prod << q->log2_elem_size);
 }
 
-static inline void *consumer_addr(struct rxe_queue *q, enum queue_type type)
-{
+static inline void *consumer_addr(struct rxe_queue *q, enum queue_type type) {
 	u32 cons;
 
 	switch (type) {
@@ -250,8 +242,7 @@ static inline void *consumer_addr(struct rxe_queue *q, enum queue_type type)
 }
 
 static inline unsigned int producer_index(struct rxe_queue *q,
-						enum queue_type type)
-{
+	enum queue_type type) {
 	u32 prod;
 
 	switch (type) {
@@ -272,8 +263,7 @@ static inline unsigned int producer_index(struct rxe_queue *q,
 }
 
 static inline unsigned int consumer_index(struct rxe_queue *q,
-						enum queue_type type)
-{
+	enum queue_type type) {
 	u32 cons;
 
 	switch (type) {
@@ -294,21 +284,18 @@ static inline unsigned int consumer_index(struct rxe_queue *q,
 }
 
 static inline void *addr_from_index(struct rxe_queue *q,
-				unsigned int index)
-{
+	unsigned int index) {
 	return q->buf->data + ((index & q->index_mask)
-				<< q->buf->log2_elem_size);
+		<< q->buf->log2_elem_size);
 }
 
 static inline unsigned int index_from_addr(const struct rxe_queue *q,
-				const void *addr)
-{
+	const void *addr) {
 	return (((u8 *)addr - q->buf->data) >> q->log2_elem_size)
-				& q->index_mask;
+		& q->index_mask;
 }
 
-static inline void *queue_head(struct rxe_queue *q, enum queue_type type)
-{
+static inline void *queue_head(struct rxe_queue *q, enum queue_type type) {
 	return queue_empty(q, type) ? NULL : consumer_addr(q, type);
 }
 

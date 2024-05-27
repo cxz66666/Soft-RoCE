@@ -12,20 +12,19 @@
 #include "rxe_queue.h"
 
 static int next_opcode(struct rxe_qp *qp, struct rxe_send_wqe *wqe,
-		       u32 opcode);
+	u32 opcode);
 
 static inline void retry_first_write_send(struct rxe_qp *qp,
-					  struct rxe_send_wqe *wqe,
-					  unsigned int mask, int npsn)
-{
+	struct rxe_send_wqe *wqe,
+	unsigned int mask, int npsn) {
 	int i;
 
 	for (i = 0; i < npsn; i++) {
 		int to_send = (wqe->dma.resid > qp->mtu) ?
-				qp->mtu : wqe->dma.resid;
+			qp->mtu : wqe->dma.resid;
 
 		qp->req.opcode = next_opcode(qp, wqe,
-					     wqe->wr.opcode);
+			wqe->wr.opcode);
 
 		if (wqe->wr.send_flags & IB_SEND_INLINE) {
 			wqe->dma.resid -= to_send;
@@ -38,8 +37,7 @@ static inline void retry_first_write_send(struct rxe_qp *qp,
 	}
 }
 
-static void req_retry(struct rxe_qp *qp)
-{
+static void req_retry(struct rxe_qp *qp) {
 	struct rxe_send_wqe *wqe;
 	unsigned int wqe_index;
 	unsigned int mask;
@@ -57,12 +55,12 @@ static void req_retry(struct rxe_qp *qp)
 		prod = producer_index(q, QUEUE_TYPE_KERNEL);
 	}
 
-	qp->req.wqe_index	= cons;
-	qp->req.psn		= qp->comp.psn;
-	qp->req.opcode		= -1;
+	qp->req.wqe_index = cons;
+	qp->req.psn = qp->comp.psn;
+	qp->req.opcode = -1;
 
 	for (wqe_index = cons; wqe_index != prod;
-			wqe_index = next_index(q, wqe_index)) {
+		wqe_index = next_index(q, wqe_index)) {
 		wqe = addr_from_index(qp->sq.queue, wqe_index);
 		mask = wr_opcode_mask(wqe->wr.opcode, qp);
 
@@ -73,10 +71,10 @@ static void req_retry(struct rxe_qp *qp)
 			continue;
 
 		wqe->iova = (mask & WR_ATOMIC_MASK) ?
-			     wqe->wr.wr.atomic.remote_addr :
-			     (mask & WR_READ_OR_WRITE_MASK) ?
-			     wqe->wr.wr.rdma.remote_addr :
-			     0;
+			wqe->wr.wr.atomic.remote_addr :
+			(mask & WR_READ_OR_WRITE_MASK) ?
+			wqe->wr.wr.rdma.remote_addr :
+			0;
 
 		if (!first || (mask & WR_READ_MASK) == 0) {
 			wqe->dma.resid = wqe->dma.length;
@@ -104,16 +102,14 @@ static void req_retry(struct rxe_qp *qp)
 	}
 }
 
-void rnr_nak_timer(struct timer_list *t)
-{
+void rnr_nak_timer(struct timer_list *t) {
 	struct rxe_qp *qp = from_timer(qp, t, rnr_nak_timer);
 
 	pr_debug("qp#%d rnr nak timer fired\n", qp_num(qp));
 	rxe_run_task(&qp->req.task, 1);
 }
 
-static struct rxe_send_wqe *req_next_wqe(struct rxe_qp *qp)
-{
+static struct rxe_send_wqe *req_next_wqe(struct rxe_qp *qp) {
 	struct rxe_send_wqe *wqe;
 	unsigned long flags;
 	struct rxe_queue *q = qp->sq.queue;
@@ -140,7 +136,7 @@ static struct rxe_send_wqe *req_next_wqe(struct rxe_qp *qp)
 			if (qp->req.state != QP_STATE_DRAIN) {
 				/* comp just finished */
 				spin_unlock_irqrestore(&qp->state_lock,
-						       flags);
+					flags);
 				break;
 			}
 
@@ -148,7 +144,7 @@ static struct rxe_send_wqe *req_next_wqe(struct rxe_qp *qp)
 				(wqe->state != wqe_state_posted))) {
 				/* comp not done yet */
 				spin_unlock_irqrestore(&qp->state_lock,
-						       flags);
+					flags);
 				break;
 			}
 
@@ -173,12 +169,12 @@ static struct rxe_send_wqe *req_next_wqe(struct rxe_qp *qp)
 	wqe = addr_from_index(q, index);
 
 	if (unlikely((qp->req.state == QP_STATE_DRAIN ||
-		      qp->req.state == QP_STATE_DRAINED) &&
-		     (wqe->state != wqe_state_processing)))
+		qp->req.state == QP_STATE_DRAINED) &&
+		(wqe->state != wqe_state_processing)))
 		return NULL;
 
 	if (unlikely((wqe->wr.send_flags & IB_SEND_FENCE) &&
-						     (index != cons))) {
+		(index != cons))) {
 		qp->req.wait_fence = 1;
 		return NULL;
 	}
@@ -187,52 +183,51 @@ static struct rxe_send_wqe *req_next_wqe(struct rxe_qp *qp)
 	return wqe;
 }
 
-static int next_opcode_rc(struct rxe_qp *qp, u32 opcode, int fits)
-{
+static int next_opcode_rc(struct rxe_qp *qp, u32 opcode, int fits) {
 	switch (opcode) {
 	case IB_WR_RDMA_WRITE:
 		if (qp->req.opcode == IB_OPCODE_RC_RDMA_WRITE_FIRST ||
-		    qp->req.opcode == IB_OPCODE_RC_RDMA_WRITE_MIDDLE)
+			qp->req.opcode == IB_OPCODE_RC_RDMA_WRITE_MIDDLE)
 			return fits ?
-				IB_OPCODE_RC_RDMA_WRITE_LAST :
-				IB_OPCODE_RC_RDMA_WRITE_MIDDLE;
+			IB_OPCODE_RC_RDMA_WRITE_LAST :
+			IB_OPCODE_RC_RDMA_WRITE_MIDDLE;
 		else
 			return fits ?
-				IB_OPCODE_RC_RDMA_WRITE_ONLY :
-				IB_OPCODE_RC_RDMA_WRITE_FIRST;
+			IB_OPCODE_RC_RDMA_WRITE_ONLY :
+			IB_OPCODE_RC_RDMA_WRITE_FIRST;
 
 	case IB_WR_RDMA_WRITE_WITH_IMM:
 		if (qp->req.opcode == IB_OPCODE_RC_RDMA_WRITE_FIRST ||
-		    qp->req.opcode == IB_OPCODE_RC_RDMA_WRITE_MIDDLE)
+			qp->req.opcode == IB_OPCODE_RC_RDMA_WRITE_MIDDLE)
 			return fits ?
-				IB_OPCODE_RC_RDMA_WRITE_LAST_WITH_IMMEDIATE :
-				IB_OPCODE_RC_RDMA_WRITE_MIDDLE;
+			IB_OPCODE_RC_RDMA_WRITE_LAST_WITH_IMMEDIATE :
+			IB_OPCODE_RC_RDMA_WRITE_MIDDLE;
 		else
 			return fits ?
-				IB_OPCODE_RC_RDMA_WRITE_ONLY_WITH_IMMEDIATE :
-				IB_OPCODE_RC_RDMA_WRITE_FIRST;
+			IB_OPCODE_RC_RDMA_WRITE_ONLY_WITH_IMMEDIATE :
+			IB_OPCODE_RC_RDMA_WRITE_FIRST;
 
 	case IB_WR_SEND:
 		if (qp->req.opcode == IB_OPCODE_RC_SEND_FIRST ||
-		    qp->req.opcode == IB_OPCODE_RC_SEND_MIDDLE)
+			qp->req.opcode == IB_OPCODE_RC_SEND_MIDDLE)
 			return fits ?
-				IB_OPCODE_RC_SEND_LAST :
-				IB_OPCODE_RC_SEND_MIDDLE;
+			IB_OPCODE_RC_SEND_LAST :
+			IB_OPCODE_RC_SEND_MIDDLE;
 		else
 			return fits ?
-				IB_OPCODE_RC_SEND_ONLY :
-				IB_OPCODE_RC_SEND_FIRST;
+			IB_OPCODE_RC_SEND_ONLY :
+			IB_OPCODE_RC_SEND_FIRST;
 
 	case IB_WR_SEND_WITH_IMM:
 		if (qp->req.opcode == IB_OPCODE_RC_SEND_FIRST ||
-		    qp->req.opcode == IB_OPCODE_RC_SEND_MIDDLE)
+			qp->req.opcode == IB_OPCODE_RC_SEND_MIDDLE)
 			return fits ?
-				IB_OPCODE_RC_SEND_LAST_WITH_IMMEDIATE :
-				IB_OPCODE_RC_SEND_MIDDLE;
+			IB_OPCODE_RC_SEND_LAST_WITH_IMMEDIATE :
+			IB_OPCODE_RC_SEND_MIDDLE;
 		else
 			return fits ?
-				IB_OPCODE_RC_SEND_ONLY_WITH_IMMEDIATE :
-				IB_OPCODE_RC_SEND_FIRST;
+			IB_OPCODE_RC_SEND_ONLY_WITH_IMMEDIATE :
+			IB_OPCODE_RC_SEND_FIRST;
 
 	case IB_WR_RDMA_READ:
 		return IB_OPCODE_RC_RDMA_READ_REQUEST;
@@ -245,12 +240,12 @@ static int next_opcode_rc(struct rxe_qp *qp, u32 opcode, int fits)
 
 	case IB_WR_SEND_WITH_INV:
 		if (qp->req.opcode == IB_OPCODE_RC_SEND_FIRST ||
-		    qp->req.opcode == IB_OPCODE_RC_SEND_MIDDLE)
+			qp->req.opcode == IB_OPCODE_RC_SEND_MIDDLE)
 			return fits ? IB_OPCODE_RC_SEND_LAST_WITH_INVALIDATE :
-				IB_OPCODE_RC_SEND_MIDDLE;
+			IB_OPCODE_RC_SEND_MIDDLE;
 		else
 			return fits ? IB_OPCODE_RC_SEND_ONLY_WITH_INVALIDATE :
-				IB_OPCODE_RC_SEND_FIRST;
+			IB_OPCODE_RC_SEND_FIRST;
 	case IB_WR_REG_MR:
 	case IB_WR_LOCAL_INV:
 		return opcode;
@@ -259,60 +254,58 @@ static int next_opcode_rc(struct rxe_qp *qp, u32 opcode, int fits)
 	return -EINVAL;
 }
 
-static int next_opcode_uc(struct rxe_qp *qp, u32 opcode, int fits)
-{
+static int next_opcode_uc(struct rxe_qp *qp, u32 opcode, int fits) {
 	switch (opcode) {
 	case IB_WR_RDMA_WRITE:
 		if (qp->req.opcode == IB_OPCODE_UC_RDMA_WRITE_FIRST ||
-		    qp->req.opcode == IB_OPCODE_UC_RDMA_WRITE_MIDDLE)
+			qp->req.opcode == IB_OPCODE_UC_RDMA_WRITE_MIDDLE)
 			return fits ?
-				IB_OPCODE_UC_RDMA_WRITE_LAST :
-				IB_OPCODE_UC_RDMA_WRITE_MIDDLE;
+			IB_OPCODE_UC_RDMA_WRITE_LAST :
+			IB_OPCODE_UC_RDMA_WRITE_MIDDLE;
 		else
 			return fits ?
-				IB_OPCODE_UC_RDMA_WRITE_ONLY :
-				IB_OPCODE_UC_RDMA_WRITE_FIRST;
+			IB_OPCODE_UC_RDMA_WRITE_ONLY :
+			IB_OPCODE_UC_RDMA_WRITE_FIRST;
 
 	case IB_WR_RDMA_WRITE_WITH_IMM:
 		if (qp->req.opcode == IB_OPCODE_UC_RDMA_WRITE_FIRST ||
-		    qp->req.opcode == IB_OPCODE_UC_RDMA_WRITE_MIDDLE)
+			qp->req.opcode == IB_OPCODE_UC_RDMA_WRITE_MIDDLE)
 			return fits ?
-				IB_OPCODE_UC_RDMA_WRITE_LAST_WITH_IMMEDIATE :
-				IB_OPCODE_UC_RDMA_WRITE_MIDDLE;
+			IB_OPCODE_UC_RDMA_WRITE_LAST_WITH_IMMEDIATE :
+			IB_OPCODE_UC_RDMA_WRITE_MIDDLE;
 		else
 			return fits ?
-				IB_OPCODE_UC_RDMA_WRITE_ONLY_WITH_IMMEDIATE :
-				IB_OPCODE_UC_RDMA_WRITE_FIRST;
+			IB_OPCODE_UC_RDMA_WRITE_ONLY_WITH_IMMEDIATE :
+			IB_OPCODE_UC_RDMA_WRITE_FIRST;
 
 	case IB_WR_SEND:
 		if (qp->req.opcode == IB_OPCODE_UC_SEND_FIRST ||
-		    qp->req.opcode == IB_OPCODE_UC_SEND_MIDDLE)
+			qp->req.opcode == IB_OPCODE_UC_SEND_MIDDLE)
 			return fits ?
-				IB_OPCODE_UC_SEND_LAST :
-				IB_OPCODE_UC_SEND_MIDDLE;
+			IB_OPCODE_UC_SEND_LAST :
+			IB_OPCODE_UC_SEND_MIDDLE;
 		else
 			return fits ?
-				IB_OPCODE_UC_SEND_ONLY :
-				IB_OPCODE_UC_SEND_FIRST;
+			IB_OPCODE_UC_SEND_ONLY :
+			IB_OPCODE_UC_SEND_FIRST;
 
 	case IB_WR_SEND_WITH_IMM:
 		if (qp->req.opcode == IB_OPCODE_UC_SEND_FIRST ||
-		    qp->req.opcode == IB_OPCODE_UC_SEND_MIDDLE)
+			qp->req.opcode == IB_OPCODE_UC_SEND_MIDDLE)
 			return fits ?
-				IB_OPCODE_UC_SEND_LAST_WITH_IMMEDIATE :
-				IB_OPCODE_UC_SEND_MIDDLE;
+			IB_OPCODE_UC_SEND_LAST_WITH_IMMEDIATE :
+			IB_OPCODE_UC_SEND_MIDDLE;
 		else
 			return fits ?
-				IB_OPCODE_UC_SEND_ONLY_WITH_IMMEDIATE :
-				IB_OPCODE_UC_SEND_FIRST;
+			IB_OPCODE_UC_SEND_ONLY_WITH_IMMEDIATE :
+			IB_OPCODE_UC_SEND_FIRST;
 	}
 
 	return -EINVAL;
 }
 
 static int next_opcode(struct rxe_qp *qp, struct rxe_send_wqe *wqe,
-		       u32 opcode)
-{
+	u32 opcode) {
 	int fits = (wqe->dma.resid <= qp->mtu);
 
 	switch (qp_type(qp)) {
@@ -341,8 +334,7 @@ static int next_opcode(struct rxe_qp *qp, struct rxe_send_wqe *wqe,
 	return -EINVAL;
 }
 
-static inline int check_init_depth(struct rxe_qp *qp, struct rxe_send_wqe *wqe)
-{
+static inline int check_init_depth(struct rxe_qp *qp, struct rxe_send_wqe *wqe) {
 	int depth;
 
 	if (wqe->has_rd_atomic)
@@ -361,8 +353,7 @@ static inline int check_init_depth(struct rxe_qp *qp, struct rxe_send_wqe *wqe)
 	return -EAGAIN;
 }
 
-static inline int get_mtu(struct rxe_qp *qp)
-{
+static inline int get_mtu(struct rxe_qp *qp) {
 	struct rxe_dev *rxe = to_rdev(qp->ibqp.device);
 
 	if ((qp_type(qp) == IB_QPT_RC) || (qp_type(qp) == IB_QPT_UC))
@@ -372,14 +363,13 @@ static inline int get_mtu(struct rxe_qp *qp)
 }
 
 static struct sk_buff *init_req_packet(struct rxe_qp *qp,
-				       struct rxe_send_wqe *wqe,
-				       int opcode, int payload,
-				       struct rxe_pkt_info *pkt)
-{
-	struct rxe_dev		*rxe = to_rdev(qp->ibqp.device);
-	struct sk_buff		*skb;
-	struct rxe_send_wr	*ibwr = &wqe->wr;
-	struct rxe_av		*av;
+	struct rxe_send_wqe *wqe,
+	int opcode, int payload,
+	struct rxe_pkt_info *pkt) {
+	struct rxe_dev *rxe = to_rdev(qp->ibqp.device);
+	struct sk_buff *skb;
+	struct rxe_send_wr *ibwr = &wqe->wr;
+	struct rxe_av *av;
 	int			pad = (-payload) & 0x3;
 	int			paylen;
 	int			solicited;
@@ -393,12 +383,12 @@ static struct sk_buff *init_req_packet(struct rxe_qp *qp,
 	/* pkt->hdr, rxe, port_num and mask are initialized in ifc
 	 * layer
 	 */
-	pkt->opcode	= opcode;
-	pkt->qp		= qp;
-	pkt->psn	= qp->req.psn;
-	pkt->mask	= rxe_opcode[opcode].mask;
-	pkt->paylen	= paylen;
-	pkt->wqe	= wqe;
+	pkt->opcode = opcode;
+	pkt->qp = qp;
+	pkt->psn = qp->req.psn;
+	pkt->mask = rxe_opcode[opcode].mask;
+	pkt->paylen = paylen;
+	pkt->wqe = wqe;
 
 	/* init skb */
 	av = rxe_get_av(pkt);
@@ -408,15 +398,15 @@ static struct sk_buff *init_req_packet(struct rxe_qp *qp,
 
 	/* init bth */
 	solicited = (ibwr->send_flags & IB_SEND_SOLICITED) &&
-			(pkt->mask & RXE_END_MASK) &&
-			((pkt->mask & (RXE_SEND_MASK)) ||
+		(pkt->mask & RXE_END_MASK) &&
+		((pkt->mask & (RXE_SEND_MASK)) ||
 			(pkt->mask & (RXE_WRITE_MASK | RXE_IMMDT_MASK)) ==
 			(RXE_WRITE_MASK | RXE_IMMDT_MASK));
 
 	pkey = IB_DEFAULT_PKEY_FULL;
 
 	qp_num = (pkt->mask & RXE_DETH_MASK) ? ibwr->wr.ud.remote_qpn :
-					 qp->attr.dest_qp_num;
+		qp->attr.dest_qp_num;
 
 	ack_req = ((pkt->mask & RXE_END_MASK) ||
 		(qp->req.noack_pkts++ > RXE_MAX_PKT_PER_ACK));
@@ -424,7 +414,7 @@ static struct sk_buff *init_req_packet(struct rxe_qp *qp,
 		qp->req.noack_pkts = 0;
 
 	bth_init(pkt, pkt->opcode, solicited, 0, pad, pkey, qp_num,
-		 ack_req, pkt->psn);
+		ack_req, pkt->psn);
 
 	/* init optional headers */
 	if (pkt->mask & RXE_RETH_MASK) {
@@ -442,7 +432,7 @@ static struct sk_buff *init_req_packet(struct rxe_qp *qp,
 	if (pkt->mask & RXE_ATMETH_MASK) {
 		atmeth_set_va(pkt, wqe->iova);
 		if (opcode == IB_OPCODE_RC_COMPARE_SWAP ||
-		    opcode == IB_OPCODE_RD_COMPARE_SWAP) {
+			opcode == IB_OPCODE_RD_COMPARE_SWAP) {
 			atmeth_set_swap_add(pkt, ibwr->wr.atomic.swap);
 			atmeth_set_comp(pkt, ibwr->wr.atomic.compare_add);
 		} else {
@@ -463,9 +453,8 @@ static struct sk_buff *init_req_packet(struct rxe_qp *qp,
 }
 
 static int finish_packet(struct rxe_qp *qp, struct rxe_send_wqe *wqe,
-		       struct rxe_pkt_info *pkt, struct sk_buff *skb,
-		       int paylen)
-{
+	struct rxe_pkt_info *pkt, struct sk_buff *skb,
+	int paylen) {
 	int err;
 
 	err = rxe_prepare(pkt, skb);
@@ -482,8 +471,8 @@ static int finish_packet(struct rxe_qp *qp, struct rxe_send_wqe *wqe,
 			wqe->dma.sge_offset += paylen;
 		} else {
 			err = copy_data(qp->pd, 0, &wqe->dma,
-					payload_addr(pkt), paylen,
-					RXE_FROM_MR_OBJ);
+				payload_addr(pkt), paylen,
+				RXE_FROM_MR_OBJ);
 			if (err)
 				return err;
 		}
@@ -498,9 +487,8 @@ static int finish_packet(struct rxe_qp *qp, struct rxe_send_wqe *wqe,
 }
 
 static void update_wqe_state(struct rxe_qp *qp,
-		struct rxe_send_wqe *wqe,
-		struct rxe_pkt_info *pkt)
-{
+	struct rxe_send_wqe *wqe,
+	struct rxe_pkt_info *pkt) {
 	if (pkt->mask & RXE_END_MASK) {
 		if (qp_type(qp) == IB_QPT_RC)
 			wqe->state = wqe_state_pending;
@@ -510,10 +498,9 @@ static void update_wqe_state(struct rxe_qp *qp,
 }
 
 static void update_wqe_psn(struct rxe_qp *qp,
-			   struct rxe_send_wqe *wqe,
-			   struct rxe_pkt_info *pkt,
-			   int payload)
-{
+	struct rxe_send_wqe *wqe,
+	struct rxe_pkt_info *pkt,
+	int payload) {
 	/* number of packets left to send including current one */
 	int num_pkt = (wqe->dma.resid + payload + qp->mtu - 1) / qp->mtu;
 
@@ -533,30 +520,27 @@ static void update_wqe_psn(struct rxe_qp *qp,
 }
 
 static void save_state(struct rxe_send_wqe *wqe,
-		       struct rxe_qp *qp,
-		       struct rxe_send_wqe *rollback_wqe,
-		       u32 *rollback_psn)
-{
-	rollback_wqe->state     = wqe->state;
+	struct rxe_qp *qp,
+	struct rxe_send_wqe *rollback_wqe,
+	u32 *rollback_psn) {
+	rollback_wqe->state = wqe->state;
 	rollback_wqe->first_psn = wqe->first_psn;
-	rollback_wqe->last_psn  = wqe->last_psn;
-	*rollback_psn		= qp->req.psn;
+	rollback_wqe->last_psn = wqe->last_psn;
+	*rollback_psn = qp->req.psn;
 }
 
 static void rollback_state(struct rxe_send_wqe *wqe,
-			   struct rxe_qp *qp,
-			   struct rxe_send_wqe *rollback_wqe,
-			   u32 rollback_psn)
-{
-	wqe->state     = rollback_wqe->state;
+	struct rxe_qp *qp,
+	struct rxe_send_wqe *rollback_wqe,
+	u32 rollback_psn) {
+	wqe->state = rollback_wqe->state;
 	wqe->first_psn = rollback_wqe->first_psn;
-	wqe->last_psn  = rollback_wqe->last_psn;
-	qp->req.psn    = rollback_psn;
+	wqe->last_psn = rollback_wqe->last_psn;
+	qp->req.psn = rollback_psn;
 }
 
 static void update_state(struct rxe_qp *qp, struct rxe_send_wqe *wqe,
-			 struct rxe_pkt_info *pkt, int payload)
-{
+	struct rxe_pkt_info *pkt, int payload) {
 	qp->req.opcode = pkt->opcode;
 
 	if (pkt->mask & RXE_END_MASK)
@@ -566,11 +550,10 @@ static void update_state(struct rxe_qp *qp, struct rxe_send_wqe *wqe,
 
 	if (qp->qp_timeout_jiffies && !timer_pending(&qp->retrans_timer))
 		mod_timer(&qp->retrans_timer,
-			  jiffies + qp->qp_timeout_jiffies);
+			jiffies + qp->qp_timeout_jiffies);
 }
 
-static int rxe_do_local_ops(struct rxe_qp *qp, struct rxe_send_wqe *wqe)
-{
+static int rxe_do_local_ops(struct rxe_qp *qp, struct rxe_send_wqe *wqe) {
 	u8 opcode = wqe->wr.opcode;
 	struct rxe_mr *mr;
 	u32 rkey;
@@ -617,14 +600,13 @@ static int rxe_do_local_ops(struct rxe_qp *qp, struct rxe_send_wqe *wqe)
 	qp->req.wqe_index = next_index(qp->sq.queue, qp->req.wqe_index);
 
 	if ((wqe->wr.send_flags & IB_SEND_SIGNALED) ||
-	    qp->sq_sig_type == IB_SIGNAL_ALL_WR)
+		qp->sq_sig_type == IB_SIGNAL_ALL_WR)
 		rxe_run_task(&qp->comp.task, 1);
 
 	return 0;
 }
 
-int rxe_requester(void *arg)
-{
+int rxe_requester(void *arg) {
 	struct rxe_qp *qp = (struct rxe_qp *)arg;
 	struct rxe_pkt_info pkt;
 	struct sk_buff *skb;
@@ -672,14 +654,14 @@ next_wqe:
 
 	if (unlikely(qp_type(qp) == IB_QPT_RC &&
 		psn_compare(qp->req.psn, (qp->comp.psn +
-				RXE_MAX_UNACKED_PSNS)) > 0)) {
+			RXE_MAX_UNACKED_PSNS)) > 0)) {
 		qp->req.wait_psn = 1;
 		goto exit;
 	}
 
 	/* Limit the number of inflight SKBs per QP */
 	if (unlikely(atomic_read(&qp->skb_out) >
-		     RXE_INFLIGHT_SKBS_PER_QP_HIGH)) {
+		RXE_INFLIGHT_SKBS_PER_QP_HIGH)) {
 		qp->need_req_skb = 1;
 		goto exit;
 	}
@@ -706,13 +688,13 @@ next_wqe:
 			 * generate an error due to this condition.
 			 */
 
-			/* fake a successful UD send */
+			 /* fake a successful UD send */
 			wqe->first_psn = qp->req.psn;
 			wqe->last_psn = qp->req.psn;
 			qp->req.psn = (qp->req.psn + 1) & BTH_PSN_MASK;
 			qp->req.opcode = IB_OPCODE_UD_SEND_ONLY;
 			qp->req.wqe_index = next_index(qp->sq.queue,
-						       qp->req.wqe_index);
+				qp->req.wqe_index);
 			wqe->state = wqe_state_done;
 			wqe->status = IB_WC_SUCCESS;
 			__rxe_do_task(&qp->comp.task);

@@ -14,10 +14,9 @@
 #include "rxe_loc.h"
 #include "rxe_queue.h"
 
-void rxe_mmap_release(struct kref *ref)
-{
+void rxe_mmap_release(struct kref *ref) {
 	struct rxe_mmap_info *ip = container_of(ref,
-					struct rxe_mmap_info, ref);
+		struct rxe_mmap_info, ref);
 	struct rxe_dev *rxe = to_rdev(ip->context->device);
 
 	spin_lock_bh(&rxe->pending_lock);
@@ -35,15 +34,13 @@ void rxe_mmap_release(struct kref *ref)
  * open and close keep track of how many times the memory region is mapped,
  * to avoid releasing it.
  */
-static void rxe_vma_open(struct vm_area_struct *vma)
-{
+static void rxe_vma_open(struct vm_area_struct *vma) {
 	struct rxe_mmap_info *ip = vma->vm_private_data;
 
 	kref_get(&ip->ref);
 }
 
-static void rxe_vma_close(struct vm_area_struct *vma)
-{
+static void rxe_vma_close(struct vm_area_struct *vma) {
 	struct rxe_mmap_info *ip = vma->vm_private_data;
 
 	kref_put(&ip->ref, rxe_mmap_release);
@@ -60,8 +57,7 @@ static const struct vm_operations_struct rxe_vm_ops = {
  * @vma: the VMA to be initialized
  * Return zero if the mmap is OK. Otherwise, return an errno.
  */
-int rxe_mmap(struct ib_ucontext *context, struct vm_area_struct *vma)
-{
+int rxe_mmap(struct ib_ucontext *context, struct vm_area_struct *vma) {
 	struct rxe_dev *rxe = to_rdev(context->device);
 	unsigned long offset = vma->vm_pgoff << PAGE_SHIFT;
 	unsigned long size = vma->vm_end - vma->vm_start;
@@ -114,8 +110,7 @@ done:
  * Allocate information for rxe_mmap
  */
 struct rxe_mmap_info *rxe_create_mmap_info(struct rxe_dev *rxe, u32 size,
-					   struct ib_udata *udata, void *obj)
-{
+	struct ib_udata *udata, void *obj) {
 	struct rxe_mmap_info *ip;
 
 	if (!udata)
@@ -141,7 +136,7 @@ struct rxe_mmap_info *rxe_create_mmap_info(struct rxe_dev *rxe, u32 size,
 	ip->info.size = size;
 	ip->context =
 		container_of(udata, struct uverbs_attr_bundle, driver_udata)
-			->context;
+		->context;
 	ip->obj = obj;
 	kref_init(&ip->ref);
 

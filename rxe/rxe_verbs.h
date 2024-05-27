@@ -14,8 +14,7 @@
 #include "rxe_task.h"
 #include "rxe_hw_counters.h"
 
-static inline int pkey_match(u16 key1, u16 key2)
-{
+static inline int pkey_match(u16 key1, u16 key2) {
 	return (((key1 & 0x7fff) != 0) &&
 		((key1 & 0x7fff) == (key2 & 0x7fff)) &&
 		((key1 & 0x8000) || (key2 & 0x8000))) ? 1 : 0;
@@ -25,8 +24,7 @@ static inline int pkey_match(u16 key1, u16 key2)
  *	   0 if psn_a == psn_b
  *	  <0 if psn_a < psn_b
  */
-static inline int psn_compare(u32 psn_a, u32 psn_b)
-{
+static inline int psn_compare(u32 psn_a, u32 psn_b) {
 	s32 diff;
 
 	diff = (psn_a - psn_b) << 8;
@@ -46,7 +44,7 @@ struct rxe_pd {
 struct rxe_ah {
 	struct ib_ah		ibah;
 	struct rxe_pool_entry	pelem;
-	struct rxe_pd		*pd;
+	struct rxe_pd *pd;
 	struct rxe_av		av;
 };
 
@@ -60,7 +58,7 @@ struct rxe_cqe {
 struct rxe_cq {
 	struct ib_cq		ibcq;
 	struct rxe_pool_entry	pelem;
-	struct rxe_queue	*queue;
+	struct rxe_queue *queue;
 	spinlock_t		cq_lock;
 	u8			notify;
 	bool			is_dying;
@@ -82,7 +80,7 @@ struct rxe_sq {
 	int			max_sge;
 	int			max_inline;
 	spinlock_t		sq_lock; /* guard queue */
-	struct rxe_queue	*queue;
+	struct rxe_queue *queue;
 };
 
 struct rxe_rq {
@@ -91,13 +89,13 @@ struct rxe_rq {
 	int			max_sge;
 	spinlock_t		producer_lock; /* guard queue producer */
 	spinlock_t		consumer_lock; /* guard queue consumer */
-	struct rxe_queue	*queue;
+	struct rxe_queue *queue;
 };
 
 struct rxe_srq {
 	struct ib_srq		ibsrq;
 	struct rxe_pool_entry	pelem;
-	struct rxe_pd		*pd;
+	struct rxe_pd *pd;
 	struct rxe_rq		rq;
 	u32			srq_num;
 	bool			is_user;
@@ -156,10 +154,10 @@ struct resp_res {
 
 	union {
 		struct {
-			struct sk_buff	*skb;
+			struct sk_buff *skb;
 		} atomic;
 		struct {
-			struct rxe_mr	*mr;
+			struct rxe_mr *mr;
 			u64		va_org;
 			u32		rkey;
 			u32		length;
@@ -182,12 +180,12 @@ struct rxe_resp_info {
 	u8			aeth_syndrome;
 
 	/* Receive only */
-	struct rxe_recv_wqe	*wqe;
+	struct rxe_recv_wqe *wqe;
 
 	/* RDMA read / atomic only */
 	u64			va;
 	u64			offset;
-	struct rxe_mr		*mr;
+	struct rxe_mr *mr;
 	u32			resid;
 	u32			rkey;
 	u32			length;
@@ -202,10 +200,10 @@ struct rxe_resp_info {
 	/* Responder resources. It's a circular list where the oldest
 	 * resource is dropped first.
 	 */
-	struct resp_res		*resources;
+	struct resp_res *resources;
 	unsigned int		res_head;
 	unsigned int		res_tail;
-	struct resp_res		*res;
+	struct resp_res *res;
 	struct rxe_task		task;
 };
 
@@ -217,17 +215,17 @@ struct rxe_qp {
 	unsigned int		mtu;
 	bool			is_user;
 
-	struct rxe_pd		*pd;
-	struct rxe_srq		*srq;
-	struct rxe_cq		*scq;
-	struct rxe_cq		*rcq;
+	struct rxe_pd *pd;
+	struct rxe_srq *srq;
+	struct rxe_cq *scq;
+	struct rxe_cq *rcq;
 
 	enum ib_sig_type	sq_sig_type;
 
 	struct rxe_sq		sq;
 	struct rxe_rq		rq;
 
-	struct socket		*sk;
+	struct socket *sk;
 	u32			dst_cookie;
 	u16			src_port;
 
@@ -300,8 +298,7 @@ struct rxe_map {
 	struct rxe_phys_buf	buf[RXE_BUF_PER_MAP];
 };
 
-static inline int rkey_is_mw(u32 rkey)
-{
+static inline int rkey_is_mw(u32 rkey) {
 	u32 index = rkey >> 8;
 
 	return (index >= RXE_MIN_MW_INDEX) && (index <= RXE_MAX_MW_INDEX);
@@ -311,7 +308,7 @@ struct rxe_mr {
 	struct rxe_pool_entry	pelem;
 	struct ib_mr		ibmr;
 
-	struct ib_umem		*umem;
+	struct ib_umem *umem;
 
 	enum rxe_mr_state	state;
 	enum rxe_mr_type	type;
@@ -334,13 +331,13 @@ struct rxe_mr {
 
 	atomic_t		num_mw;
 
-	struct rxe_map		**map;
+	struct rxe_map **map;
 };
 
 enum rxe_mw_state {
-	RXE_MW_STATE_INVALID	= RXE_MR_STATE_INVALID,
-	RXE_MW_STATE_FREE	= RXE_MR_STATE_FREE,
-	RXE_MW_STATE_VALID	= RXE_MR_STATE_VALID,
+	RXE_MW_STATE_INVALID = RXE_MR_STATE_INVALID,
+	RXE_MW_STATE_FREE = RXE_MR_STATE_FREE,
+	RXE_MW_STATE_VALID = RXE_MR_STATE_VALID,
 };
 
 struct rxe_mw {
@@ -348,8 +345,8 @@ struct rxe_mw {
 	struct rxe_pool_entry	pelem;
 	spinlock_t		lock;
 	enum rxe_mw_state	state;
-	struct rxe_qp		*qp; /* Type 2 only */
-	struct rxe_mr		*mr;
+	struct rxe_qp *qp; /* Type 2 only */
+	struct rxe_mr *mr;
 	int			access;
 	u64			addr;
 	u64			length;
@@ -358,7 +355,7 @@ struct rxe_mw {
 struct rxe_mc_grp {
 	struct rxe_pool_entry	pelem;
 	spinlock_t		mcg_lock; /* guard group */
-	struct rxe_dev		*rxe;
+	struct rxe_dev *rxe;
 	struct list_head	qp_list;
 	union ib_gid		mgid;
 	int			num_qp;
@@ -370,8 +367,8 @@ struct rxe_mc_elem {
 	struct rxe_pool_entry	pelem;
 	struct list_head	qp_list;
 	struct list_head	grp_list;
-	struct rxe_qp		*qp;
-	struct rxe_mc_grp	*grp;
+	struct rxe_qp *qp;
+	struct rxe_mc_grp *grp;
 };
 
 struct rxe_port {
@@ -392,7 +389,7 @@ struct rxe_dev {
 	int			max_inline_data;
 	struct mutex	usdev_lock;
 
-	struct net_device	*ndev;
+	struct net_device *ndev;
 
 	int			xmit_errors;
 
@@ -416,81 +413,66 @@ struct rxe_dev {
 	atomic64_t		stats_counters[RXE_NUM_OF_COUNTERS];
 
 	struct rxe_port		port;
-	struct crypto_shash	*tfm;
+	struct crypto_shash *tfm;
 };
 
-static inline void rxe_counter_inc(struct rxe_dev *rxe, enum rxe_counters index)
-{
+static inline void rxe_counter_inc(struct rxe_dev *rxe, enum rxe_counters index) {
 	atomic64_inc(&rxe->stats_counters[index]);
 }
 
-static inline struct rxe_dev *to_rdev(struct ib_device *dev)
-{
+static inline struct rxe_dev *to_rdev(struct ib_device *dev) {
 	return dev ? container_of(dev, struct rxe_dev, ib_dev) : NULL;
 }
 
-static inline struct rxe_ucontext *to_ruc(struct ib_ucontext *uc)
-{
+static inline struct rxe_ucontext *to_ruc(struct ib_ucontext *uc) {
 	return uc ? container_of(uc, struct rxe_ucontext, ibuc) : NULL;
 }
 
-static inline struct rxe_pd *to_rpd(struct ib_pd *pd)
-{
+static inline struct rxe_pd *to_rpd(struct ib_pd *pd) {
 	return pd ? container_of(pd, struct rxe_pd, ibpd) : NULL;
 }
 
-static inline struct rxe_ah *to_rah(struct ib_ah *ah)
-{
+static inline struct rxe_ah *to_rah(struct ib_ah *ah) {
 	return ah ? container_of(ah, struct rxe_ah, ibah) : NULL;
 }
 
-static inline struct rxe_srq *to_rsrq(struct ib_srq *srq)
-{
+static inline struct rxe_srq *to_rsrq(struct ib_srq *srq) {
 	return srq ? container_of(srq, struct rxe_srq, ibsrq) : NULL;
 }
 
-static inline struct rxe_qp *to_rqp(struct ib_qp *qp)
-{
+static inline struct rxe_qp *to_rqp(struct ib_qp *qp) {
 	return qp ? container_of(qp, struct rxe_qp, ibqp) : NULL;
 }
 
-static inline struct rxe_cq *to_rcq(struct ib_cq *cq)
-{
+static inline struct rxe_cq *to_rcq(struct ib_cq *cq) {
 	return cq ? container_of(cq, struct rxe_cq, ibcq) : NULL;
 }
 
-static inline struct rxe_mr *to_rmr(struct ib_mr *mr)
-{
+static inline struct rxe_mr *to_rmr(struct ib_mr *mr) {
 	return mr ? container_of(mr, struct rxe_mr, ibmr) : NULL;
 }
 
-static inline struct rxe_mw *to_rmw(struct ib_mw *mw)
-{
+static inline struct rxe_mw *to_rmw(struct ib_mw *mw) {
 	return mw ? container_of(mw, struct rxe_mw, ibmw) : NULL;
 }
 
-static inline struct rxe_pd *mr_pd(struct rxe_mr *mr)
-{
+static inline struct rxe_pd *mr_pd(struct rxe_mr *mr) {
 	return to_rpd(mr->ibmr.pd);
 }
 
-static inline u32 mr_lkey(struct rxe_mr *mr)
-{
+static inline u32 mr_lkey(struct rxe_mr *mr) {
 	return mr->ibmr.lkey;
 }
 
-static inline u32 mr_rkey(struct rxe_mr *mr)
-{
+static inline u32 mr_rkey(struct rxe_mr *mr) {
 	return mr->ibmr.rkey;
 }
 
-static inline struct rxe_pd *rxe_mw_pd(struct rxe_mw *mw)
-{
+static inline struct rxe_pd *rxe_mw_pd(struct rxe_mw *mw) {
 	return to_rpd(mw->ibmw.pd);
 }
 
-static inline u32 rxe_mw_rkey(struct rxe_mw *mw)
-{
+static inline u32 rxe_mw_rkey(struct rxe_mw *mw) {
 	return mw->ibmw.rkey;
 }
 

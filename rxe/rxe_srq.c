@@ -10,8 +10,7 @@
 #include "rxe_queue.h"
 
 int rxe_srq_chk_attr(struct rxe_dev *rxe, struct rxe_srq *srq,
-		     struct ib_srq_attr *attr, enum ib_srq_attr_mask mask)
-{
+	struct ib_srq_attr *attr, enum ib_srq_attr_mask mask) {
 	if (srq && srq->error) {
 		pr_warn("srq in error state\n");
 		goto err1;
@@ -49,7 +48,7 @@ int rxe_srq_chk_attr(struct rxe_dev *rxe, struct rxe_srq *srq,
 		if (srq && (attr->srq_limit > srq->rq.queue->buf->index_mask)) {
 			pr_warn("srq_limit (%d) > cur limit(%d)\n",
 				attr->srq_limit,
-				 srq->rq.queue->buf->index_mask);
+				srq->rq.queue->buf->index_mask);
 			goto err1;
 		}
 	}
@@ -72,30 +71,29 @@ err1:
 }
 
 int rxe_srq_from_init(struct rxe_dev *rxe, struct rxe_srq *srq,
-		      struct ib_srq_init_attr *init, struct ib_udata *udata,
-		      struct rxe_create_srq_resp __user *uresp)
-{
+	struct ib_srq_init_attr *init, struct ib_udata *udata,
+	struct rxe_create_srq_resp __user *uresp) {
 	int err;
 	int srq_wqe_size;
 	struct rxe_queue *q;
 	enum queue_type type;
 
-	srq->ibsrq.event_handler	= init->event_handler;
-	srq->ibsrq.srq_context		= init->srq_context;
-	srq->limit		= init->attr.srq_limit;
-	srq->srq_num		= srq->pelem.index;
-	srq->rq.max_wr		= init->attr.max_wr;
-	srq->rq.max_sge		= init->attr.max_sge;
-	srq->rq.is_user		= srq->is_user;
+	srq->ibsrq.event_handler = init->event_handler;
+	srq->ibsrq.srq_context = init->srq_context;
+	srq->limit = init->attr.srq_limit;
+	srq->srq_num = srq->pelem.index;
+	srq->rq.max_wr = init->attr.max_wr;
+	srq->rq.max_sge = init->attr.max_sge;
+	srq->rq.is_user = srq->is_user;
 
-	srq_wqe_size		= rcv_wqe_size(srq->rq.max_sge);
+	srq_wqe_size = rcv_wqe_size(srq->rq.max_sge);
 
 	spin_lock_init(&srq->rq.producer_lock);
 	spin_lock_init(&srq->rq.consumer_lock);
 
 	type = uresp ? QUEUE_TYPE_FROM_USER : QUEUE_TYPE_KERNEL;
 	q = rxe_queue_init(rxe, &srq->rq.max_wr,
-			srq_wqe_size, type);
+		srq_wqe_size, type);
 	if (!q) {
 		pr_warn("unable to allocate queue for srq\n");
 		return -ENOMEM;
@@ -104,7 +102,7 @@ int rxe_srq_from_init(struct rxe_dev *rxe, struct rxe_srq *srq,
 	srq->rq.queue = q;
 
 	err = do_mmap_info(rxe, uresp ? &uresp->mi : NULL, udata, q->buf,
-			   q->buf_size, &q->ip);
+		q->buf_size, &q->ip);
 	if (err) {
 		vfree(q->buf);
 		kfree(q);
@@ -113,7 +111,7 @@ int rxe_srq_from_init(struct rxe_dev *rxe, struct rxe_srq *srq,
 
 	if (uresp) {
 		if (copy_to_user(&uresp->srq_num, &srq->srq_num,
-				 sizeof(uresp->srq_num))) {
+			sizeof(uresp->srq_num))) {
 			rxe_queue_cleanup(q);
 			return -EFAULT;
 		}
@@ -123,9 +121,8 @@ int rxe_srq_from_init(struct rxe_dev *rxe, struct rxe_srq *srq,
 }
 
 int rxe_srq_from_attr(struct rxe_dev *rxe, struct rxe_srq *srq,
-		      struct ib_srq_attr *attr, enum ib_srq_attr_mask mask,
-		      struct rxe_modify_srq_cmd *ucmd, struct ib_udata *udata)
-{
+	struct ib_srq_attr *attr, enum ib_srq_attr_mask mask,
+	struct rxe_modify_srq_cmd *ucmd, struct ib_udata *udata) {
 	int err;
 	struct rxe_queue *q = srq->rq.queue;
 	struct mminfo __user *mi = NULL;
@@ -138,9 +135,9 @@ int rxe_srq_from_attr(struct rxe_dev *rxe, struct rxe_srq *srq,
 		mi = u64_to_user_ptr(ucmd->mmap_info_addr);
 
 		err = rxe_queue_resize(q, &attr->max_wr,
-				       rcv_wqe_size(srq->rq.max_sge), udata, mi,
-				       &srq->rq.producer_lock,
-				       &srq->rq.consumer_lock);
+			rcv_wqe_size(srq->rq.max_sge), udata, mi,
+			&srq->rq.producer_lock,
+			&srq->rq.consumer_lock);
 		if (err)
 			goto err2;
 	}

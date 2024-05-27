@@ -10,9 +10,8 @@
 #include "rxe_queue.h"
 
 int do_mmap_info(struct rxe_dev *rxe, struct mminfo __user *outbuf,
-		 struct ib_udata *udata, struct rxe_queue_buf *buf,
-		 size_t buf_size, struct rxe_mmap_info **ip_p)
-{
+	struct ib_udata *udata, struct rxe_queue_buf *buf,
+	size_t buf_size, struct rxe_mmap_info **ip_p) {
 	int err;
 	struct rxe_mmap_info *ip = NULL;
 
@@ -43,8 +42,7 @@ err1:
 	return err;
 }
 
-inline void rxe_queue_reset(struct rxe_queue *q)
-{
+inline void rxe_queue_reset(struct rxe_queue *q) {
 	/* queue is comprised from header and the memory
 	 * of the actual queue. See "struct rxe_queue_buf" in rxe_queue.h
 	 * reset only the queue itself and not the management header
@@ -53,8 +51,7 @@ inline void rxe_queue_reset(struct rxe_queue *q)
 }
 
 struct rxe_queue *rxe_queue_init(struct rxe_dev *rxe, int *num_elem,
-			unsigned int elem_size, enum queue_type type)
-{
+	unsigned int elem_size, enum queue_type type) {
 	struct rxe_queue *q;
 	size_t buf_size;
 	unsigned int num_slots;
@@ -109,15 +106,14 @@ err1:
  * still work
  */
 static int resize_finish(struct rxe_queue *q, struct rxe_queue *new_q,
-			 unsigned int num_elem)
-{
+	unsigned int num_elem) {
 	if (!queue_empty(q, q->type) && (num_elem < queue_count(q, q->type)))
 		return -EINVAL;
 
 	while (!queue_empty(q, q->type)) {
 		memcpy(producer_addr(new_q, new_q->type),
-					consumer_addr(q, q->type),
-					new_q->elem_size);
+			consumer_addr(q, q->type),
+			new_q->elem_size);
 		advance_producer(new_q, new_q->type);
 		advance_consumer(q, q->type);
 	}
@@ -128,10 +124,9 @@ static int resize_finish(struct rxe_queue *q, struct rxe_queue *new_q,
 }
 
 int rxe_queue_resize(struct rxe_queue *q, unsigned int *num_elem_p,
-		     unsigned int elem_size, struct ib_udata *udata,
-		     struct mminfo __user *outbuf, spinlock_t *producer_lock,
-		     spinlock_t *consumer_lock)
-{
+	unsigned int elem_size, struct ib_udata *udata,
+	struct mminfo __user *outbuf, spinlock_t *producer_lock,
+	spinlock_t *consumer_lock) {
 	struct rxe_queue *new_q;
 	unsigned int num_elem = *num_elem_p;
 	int err;
@@ -142,7 +137,7 @@ int rxe_queue_resize(struct rxe_queue *q, unsigned int *num_elem_p,
 		return -ENOMEM;
 
 	err = do_mmap_info(new_q->rxe, outbuf, udata, new_q->buf,
-			   new_q->buf_size, &new_q->ip);
+		new_q->buf_size, &new_q->ip);
 	if (err) {
 		vfree(new_q->buf);
 		kfree(new_q);
@@ -172,8 +167,7 @@ err1:
 	return err;
 }
 
-void rxe_queue_cleanup(struct rxe_queue *q)
-{
+void rxe_queue_cleanup(struct rxe_queue *q) {
 	if (q->ip)
 		kref_put(&q->ip->ref, rxe_mmap_release);
 	else

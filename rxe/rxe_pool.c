@@ -7,92 +7,90 @@
 #include "rxe.h"
 #include "rxe_loc.h"
 
-/* info about object pools
- */
+ /* info about object pools
+  */
 struct rxe_type_info rxe_type_info[RXE_NUM_TYPES] = {
 	[RXE_TYPE_UC] = {
-		.name		= "rxe-uc",
-		.size		= sizeof(struct rxe_ucontext),
-		.elem_offset	= offsetof(struct rxe_ucontext, pelem),
-		.flags          = RXE_POOL_NO_ALLOC,
+		.name = "rxe-uc",
+		.size = sizeof(struct rxe_ucontext),
+		.elem_offset = offsetof(struct rxe_ucontext, pelem),
+		.flags = RXE_POOL_NO_ALLOC,
 	},
 	[RXE_TYPE_PD] = {
-		.name		= "rxe-pd",
-		.size		= sizeof(struct rxe_pd),
-		.elem_offset	= offsetof(struct rxe_pd, pelem),
-		.flags		= RXE_POOL_NO_ALLOC,
+		.name = "rxe-pd",
+		.size = sizeof(struct rxe_pd),
+		.elem_offset = offsetof(struct rxe_pd, pelem),
+		.flags = RXE_POOL_NO_ALLOC,
 	},
 	[RXE_TYPE_AH] = {
-		.name		= "rxe-ah",
-		.size		= sizeof(struct rxe_ah),
-		.elem_offset	= offsetof(struct rxe_ah, pelem),
-		.flags		= RXE_POOL_NO_ALLOC,
+		.name = "rxe-ah",
+		.size = sizeof(struct rxe_ah),
+		.elem_offset = offsetof(struct rxe_ah, pelem),
+		.flags = RXE_POOL_NO_ALLOC,
 	},
 	[RXE_TYPE_SRQ] = {
-		.name		= "rxe-srq",
-		.size		= sizeof(struct rxe_srq),
-		.elem_offset	= offsetof(struct rxe_srq, pelem),
-		.flags		= RXE_POOL_INDEX | RXE_POOL_NO_ALLOC,
-		.min_index	= RXE_MIN_SRQ_INDEX,
-		.max_index	= RXE_MAX_SRQ_INDEX,
+		.name = "rxe-srq",
+		.size = sizeof(struct rxe_srq),
+		.elem_offset = offsetof(struct rxe_srq, pelem),
+		.flags = RXE_POOL_INDEX | RXE_POOL_NO_ALLOC,
+		.min_index = RXE_MIN_SRQ_INDEX,
+		.max_index = RXE_MAX_SRQ_INDEX,
 	},
 	[RXE_TYPE_QP] = {
-		.name		= "rxe-qp",
-		.size		= sizeof(struct rxe_qp),
-		.elem_offset	= offsetof(struct rxe_qp, pelem),
-		.cleanup	= rxe_qp_cleanup,
-		.flags		= RXE_POOL_INDEX | RXE_POOL_NO_ALLOC,
-		.min_index	= RXE_MIN_QP_INDEX,
-		.max_index	= RXE_MAX_QP_INDEX,
+		.name = "rxe-qp",
+		.size = sizeof(struct rxe_qp),
+		.elem_offset = offsetof(struct rxe_qp, pelem),
+		.cleanup = rxe_qp_cleanup,
+		.flags = RXE_POOL_INDEX | RXE_POOL_NO_ALLOC,
+		.min_index = RXE_MIN_QP_INDEX,
+		.max_index = RXE_MAX_QP_INDEX,
 	},
 	[RXE_TYPE_CQ] = {
-		.name		= "rxe-cq",
-		.size		= sizeof(struct rxe_cq),
-		.elem_offset	= offsetof(struct rxe_cq, pelem),
-		.flags          = RXE_POOL_NO_ALLOC,
-		.cleanup	= rxe_cq_cleanup,
+		.name = "rxe-cq",
+		.size = sizeof(struct rxe_cq),
+		.elem_offset = offsetof(struct rxe_cq, pelem),
+		.flags = RXE_POOL_NO_ALLOC,
+		.cleanup = rxe_cq_cleanup,
 	},
 	[RXE_TYPE_MR] = {
-		.name		= "rxe-mr",
-		.size		= sizeof(struct rxe_mr),
-		.elem_offset	= offsetof(struct rxe_mr, pelem),
-		.cleanup	= rxe_mr_cleanup,
-		.flags		= RXE_POOL_INDEX,
-		.max_index	= RXE_MAX_MR_INDEX,
-		.min_index	= RXE_MIN_MR_INDEX,
+		.name = "rxe-mr",
+		.size = sizeof(struct rxe_mr),
+		.elem_offset = offsetof(struct rxe_mr, pelem),
+		.cleanup = rxe_mr_cleanup,
+		.flags = RXE_POOL_INDEX,
+		.max_index = RXE_MAX_MR_INDEX,
+		.min_index = RXE_MIN_MR_INDEX,
 	},
 	[RXE_TYPE_MW] = {
-		.name		= "rxe-mw",
-		.size		= sizeof(struct rxe_mw),
-		.elem_offset	= offsetof(struct rxe_mw, pelem),
-		.cleanup	= rxe_mw_cleanup,
-		.flags		= RXE_POOL_INDEX | RXE_POOL_NO_ALLOC,
-		.max_index	= RXE_MAX_MW_INDEX,
-		.min_index	= RXE_MIN_MW_INDEX,
+		.name = "rxe-mw",
+		.size = sizeof(struct rxe_mw),
+		.elem_offset = offsetof(struct rxe_mw, pelem),
+		.cleanup = rxe_mw_cleanup,
+		.flags = RXE_POOL_INDEX | RXE_POOL_NO_ALLOC,
+		.max_index = RXE_MAX_MW_INDEX,
+		.min_index = RXE_MIN_MW_INDEX,
 	},
 	[RXE_TYPE_MC_GRP] = {
-		.name		= "rxe-mc_grp",
-		.size		= sizeof(struct rxe_mc_grp),
-		.elem_offset	= offsetof(struct rxe_mc_grp, pelem),
-		.cleanup	= rxe_mc_cleanup,
-		.flags		= RXE_POOL_KEY,
-		.key_offset	= offsetof(struct rxe_mc_grp, mgid),
-		.key_size	= sizeof(union ib_gid),
+		.name = "rxe-mc_grp",
+		.size = sizeof(struct rxe_mc_grp),
+		.elem_offset = offsetof(struct rxe_mc_grp, pelem),
+		.cleanup = rxe_mc_cleanup,
+		.flags = RXE_POOL_KEY,
+		.key_offset = offsetof(struct rxe_mc_grp, mgid),
+		.key_size = sizeof(union ib_gid),
 	},
 	[RXE_TYPE_MC_ELEM] = {
-		.name		= "rxe-mc_elem",
-		.size		= sizeof(struct rxe_mc_elem),
-		.elem_offset	= offsetof(struct rxe_mc_elem, pelem),
+		.name = "rxe-mc_elem",
+		.size = sizeof(struct rxe_mc_elem),
+		.elem_offset = offsetof(struct rxe_mc_elem, pelem),
 	},
 };
 
-static inline const char *pool_name(struct rxe_pool *pool)
-{
+static inline const char *pool_name(struct rxe_pool *pool) {
 	return rxe_type_info[pool->type].name;
 }
 
-static int rxe_pool_init_index(struct rxe_pool *pool, u32 max, u32 min)
-{
+static int rxe_pool_init_index(struct rxe_pool *pool, u32 max, u32 min) {
 	int err = 0;
 	size_t size;
 
@@ -120,24 +118,23 @@ out:
 }
 
 int rxe_pool_init(
-	struct rxe_dev		*rxe,
-	struct rxe_pool		*pool,
+	struct rxe_dev *rxe,
+	struct rxe_pool *pool,
 	enum rxe_elem_type	type,
-	unsigned int		max_elem)
-{
+	unsigned int		max_elem) {
 	int			err = 0;
 	size_t			size = rxe_type_info[type].size;
 
 	memset(pool, 0, sizeof(*pool));
 
-	pool->rxe		= rxe;
-	pool->type		= type;
-	pool->max_elem		= max_elem;
-	pool->elem_size		= ALIGN(size, RXE_POOL_ALIGN);
-	pool->flags		= rxe_type_info[type].flags;
-	pool->index.tree	= RB_ROOT;
-	pool->key.tree		= RB_ROOT;
-	pool->cleanup		= rxe_type_info[type].cleanup;
+	pool->rxe = rxe;
+	pool->type = type;
+	pool->max_elem = max_elem;
+	pool->elem_size = ALIGN(size, RXE_POOL_ALIGN);
+	pool->flags = rxe_type_info[type].flags;
+	pool->index.tree = RB_ROOT;
+	pool->key.tree = RB_ROOT;
+	pool->cleanup = rxe_type_info[type].cleanup;
 
 	atomic_set(&pool->num_elem, 0);
 
@@ -145,8 +142,8 @@ int rxe_pool_init(
 
 	if (rxe_type_info[type].flags & RXE_POOL_INDEX) {
 		err = rxe_pool_init_index(pool,
-					  rxe_type_info[type].max_index,
-					  rxe_type_info[type].min_index);
+			rxe_type_info[type].max_index,
+			rxe_type_info[type].min_index);
 		if (err)
 			goto out;
 	}
@@ -160,8 +157,7 @@ out:
 	return err;
 }
 
-void rxe_pool_cleanup(struct rxe_pool *pool)
-{
+void rxe_pool_cleanup(struct rxe_pool *pool) {
 	if (atomic_read(&pool->num_elem) > 0)
 		pr_warn("%s pool destroyed with unfree'd elem\n",
 			pool_name(pool));
@@ -169,8 +165,7 @@ void rxe_pool_cleanup(struct rxe_pool *pool)
 	kfree(pool->index.table);
 }
 
-static u32 alloc_index(struct rxe_pool *pool)
-{
+static u32 alloc_index(struct rxe_pool *pool) {
 	u32 index;
 	u32 range = pool->index.max_index - pool->index.min_index + 1;
 
@@ -184,8 +179,7 @@ static u32 alloc_index(struct rxe_pool *pool)
 	return index + pool->index.min_index;
 }
 
-static int rxe_insert_index(struct rxe_pool *pool, struct rxe_pool_entry *new)
-{
+static int rxe_insert_index(struct rxe_pool *pool, struct rxe_pool_entry *new) {
 	struct rb_node **link = &pool->index.tree.rb_node;
 	struct rb_node *parent = NULL;
 	struct rxe_pool_entry *elem;
@@ -211,8 +205,7 @@ static int rxe_insert_index(struct rxe_pool *pool, struct rxe_pool_entry *new)
 	return 0;
 }
 
-static int rxe_insert_key(struct rxe_pool *pool, struct rxe_pool_entry *new)
-{
+static int rxe_insert_key(struct rxe_pool *pool, struct rxe_pool_entry *new) {
 	struct rb_node **link = &pool->key.tree.rb_node;
 	struct rb_node *parent = NULL;
 	struct rxe_pool_entry *elem;
@@ -223,7 +216,7 @@ static int rxe_insert_key(struct rxe_pool *pool, struct rxe_pool_entry *new)
 		elem = rb_entry(parent, struct rxe_pool_entry, key_node);
 
 		cmp = memcmp((u8 *)elem + pool->key.key_offset,
-			     (u8 *)new + pool->key.key_offset, pool->key.key_size);
+			(u8 *)new + pool->key.key_offset, pool->key.key_size);
 
 		if (cmp == 0) {
 			pr_warn("key already exists!\n");
@@ -242,8 +235,7 @@ static int rxe_insert_key(struct rxe_pool *pool, struct rxe_pool_entry *new)
 	return 0;
 }
 
-int __rxe_add_key_locked(struct rxe_pool_entry *elem, void *key)
-{
+int __rxe_add_key_locked(struct rxe_pool_entry *elem, void *key) {
 	struct rxe_pool *pool = elem->pool;
 	int err;
 
@@ -253,8 +245,7 @@ int __rxe_add_key_locked(struct rxe_pool_entry *elem, void *key)
 	return err;
 }
 
-int __rxe_add_key(struct rxe_pool_entry *elem, void *key)
-{
+int __rxe_add_key(struct rxe_pool_entry *elem, void *key) {
 	struct rxe_pool *pool = elem->pool;
 	unsigned long flags;
 	int err;
@@ -266,15 +257,13 @@ int __rxe_add_key(struct rxe_pool_entry *elem, void *key)
 	return err;
 }
 
-void __rxe_drop_key_locked(struct rxe_pool_entry *elem)
-{
+void __rxe_drop_key_locked(struct rxe_pool_entry *elem) {
 	struct rxe_pool *pool = elem->pool;
 
 	rb_erase(&elem->key_node, &pool->key.tree);
 }
 
-void __rxe_drop_key(struct rxe_pool_entry *elem)
-{
+void __rxe_drop_key(struct rxe_pool_entry *elem) {
 	struct rxe_pool *pool = elem->pool;
 	unsigned long flags;
 
@@ -283,8 +272,7 @@ void __rxe_drop_key(struct rxe_pool_entry *elem)
 	write_unlock_irqrestore(&pool->pool_lock, flags);
 }
 
-int __rxe_add_index_locked(struct rxe_pool_entry *elem)
-{
+int __rxe_add_index_locked(struct rxe_pool_entry *elem) {
 	struct rxe_pool *pool = elem->pool;
 	int err;
 
@@ -294,8 +282,7 @@ int __rxe_add_index_locked(struct rxe_pool_entry *elem)
 	return err;
 }
 
-int __rxe_add_index(struct rxe_pool_entry *elem)
-{
+int __rxe_add_index(struct rxe_pool_entry *elem) {
 	struct rxe_pool *pool = elem->pool;
 	unsigned long flags;
 	int err;
@@ -307,16 +294,14 @@ int __rxe_add_index(struct rxe_pool_entry *elem)
 	return err;
 }
 
-void __rxe_drop_index_locked(struct rxe_pool_entry *elem)
-{
+void __rxe_drop_index_locked(struct rxe_pool_entry *elem) {
 	struct rxe_pool *pool = elem->pool;
 
 	clear_bit(elem->index - pool->index.min_index, pool->index.table);
 	rb_erase(&elem->index_node, &pool->index.tree);
 }
 
-void __rxe_drop_index(struct rxe_pool_entry *elem)
-{
+void __rxe_drop_index(struct rxe_pool_entry *elem) {
 	struct rxe_pool *pool = elem->pool;
 	unsigned long flags;
 
@@ -325,8 +310,7 @@ void __rxe_drop_index(struct rxe_pool_entry *elem)
 	write_unlock_irqrestore(&pool->pool_lock, flags);
 }
 
-void *rxe_alloc_locked(struct rxe_pool *pool)
-{
+void *rxe_alloc_locked(struct rxe_pool *pool) {
 	struct rxe_type_info *info = &rxe_type_info[pool->type];
 	struct rxe_pool_entry *elem;
 	u8 *obj;
@@ -350,8 +334,7 @@ out_cnt:
 	return NULL;
 }
 
-void *rxe_alloc(struct rxe_pool *pool)
-{
+void *rxe_alloc(struct rxe_pool *pool) {
 	struct rxe_type_info *info = &rxe_type_info[pool->type];
 	struct rxe_pool_entry *elem;
 	u8 *obj;
@@ -375,8 +358,7 @@ out_cnt:
 	return NULL;
 }
 
-int __rxe_add_to_pool(struct rxe_pool *pool, struct rxe_pool_entry *elem)
-{
+int __rxe_add_to_pool(struct rxe_pool *pool, struct rxe_pool_entry *elem) {
 	if (atomic_inc_return(&pool->num_elem) > pool->max_elem)
 		goto out_cnt;
 
@@ -390,8 +372,7 @@ out_cnt:
 	return -EINVAL;
 }
 
-void rxe_elem_release(struct kref *kref)
-{
+void rxe_elem_release(struct kref *kref) {
 	struct rxe_pool_entry *elem =
 		container_of(kref, struct rxe_pool_entry, ref_cnt);
 	struct rxe_pool *pool = elem->pool;
@@ -409,8 +390,7 @@ void rxe_elem_release(struct kref *kref)
 	atomic_dec(&pool->num_elem);
 }
 
-void *rxe_pool_get_index_locked(struct rxe_pool *pool, u32 index)
-{
+void *rxe_pool_get_index_locked(struct rxe_pool *pool, u32 index) {
 	struct rxe_type_info *info = &rxe_type_info[pool->type];
 	struct rb_node *node;
 	struct rxe_pool_entry *elem;
@@ -439,8 +419,7 @@ void *rxe_pool_get_index_locked(struct rxe_pool *pool, u32 index)
 	return obj;
 }
 
-void *rxe_pool_get_index(struct rxe_pool *pool, u32 index)
-{
+void *rxe_pool_get_index(struct rxe_pool *pool, u32 index) {
 	u8 *obj;
 	unsigned long flags;
 
@@ -451,8 +430,7 @@ void *rxe_pool_get_index(struct rxe_pool *pool, u32 index)
 	return obj;
 }
 
-void *rxe_pool_get_key_locked(struct rxe_pool *pool, void *key)
-{
+void *rxe_pool_get_key_locked(struct rxe_pool *pool, void *key) {
 	struct rxe_type_info *info = &rxe_type_info[pool->type];
 	struct rb_node *node;
 	struct rxe_pool_entry *elem;
@@ -465,7 +443,7 @@ void *rxe_pool_get_key_locked(struct rxe_pool *pool, void *key)
 		elem = rb_entry(node, struct rxe_pool_entry, key_node);
 
 		cmp = memcmp((u8 *)elem + pool->key.key_offset,
-			     key, pool->key.key_size);
+			key, pool->key.key_size);
 
 		if (cmp > 0)
 			node = node->rb_left;
@@ -485,8 +463,7 @@ void *rxe_pool_get_key_locked(struct rxe_pool *pool, void *key)
 	return obj;
 }
 
-void *rxe_pool_get_key(struct rxe_pool *pool, void *key)
-{
+void *rxe_pool_get_key(struct rxe_pool *pool, void *key) {
 	u8 *obj;
 	unsigned long flags;
 

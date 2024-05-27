@@ -7,12 +7,11 @@
 #include "rxe.h"
 #include "rxe_loc.h"
 
-/* Return a random 8 bit key value that is
- * different than the last_key. Set last_key to -1
- * if this is the first key for an MR or MW
- */
-u8 rxe_get_next_key(u32 last_key)
-{
+ /* Return a random 8 bit key value that is
+  * different than the last_key. Set last_key to -1
+  * if this is the first key for an MR or MW
+  */
+u8 rxe_get_next_key(u32 last_key) {
 	u8 key;
 
 	do {
@@ -22,15 +21,14 @@ u8 rxe_get_next_key(u32 last_key)
 	return key;
 }
 
-int mr_check_range(struct rxe_mr *mr, u64 iova, size_t length)
-{
+int mr_check_range(struct rxe_mr *mr, u64 iova, size_t length) {
 	switch (mr->type) {
 	case RXE_MR_TYPE_DMA:
 		return 0;
 
 	case RXE_MR_TYPE_MR:
 		if (iova < mr->iova || length > mr->length ||
-		    iova > mr->iova + mr->length - length)
+			iova > mr->iova + mr->length - length)
 			return -EFAULT;
 		return 0;
 
@@ -43,8 +41,7 @@ int mr_check_range(struct rxe_mr *mr, u64 iova, size_t length)
 				| IB_ACCESS_REMOTE_WRITE	\
 				| IB_ACCESS_REMOTE_ATOMIC)
 
-static void rxe_mr_init(int access, struct rxe_mr *mr)
-{
+static void rxe_mr_init(int access, struct rxe_mr *mr) {
 	u32 lkey = mr->pelem.index << 8 | rxe_get_next_key(-1);
 	u32 rkey = (access & IB_ACCESS_REMOTE) ? lkey : 0;
 
@@ -55,8 +52,7 @@ static void rxe_mr_init(int access, struct rxe_mr *mr)
 	mr->map_shift = ilog2(RXE_BUF_PER_MAP);
 }
 
-static int rxe_mr_alloc(struct rxe_mr *mr, int num_buf)
-{
+static int rxe_mr_alloc(struct rxe_mr *mr, int num_buf) {
 	int i;
 	int num_map;
 	struct rxe_map **map = mr->map;
@@ -93,8 +89,7 @@ err1:
 	return -ENOMEM;
 }
 
-void rxe_mr_init_dma(struct rxe_pd *pd, int access, struct rxe_mr *mr)
-{
+void rxe_mr_init_dma(struct rxe_pd *pd, int access, struct rxe_mr *mr) {
 	rxe_mr_init(access, mr);
 
 	mr->ibmr.pd = &pd->ibpd;
@@ -104,14 +99,13 @@ void rxe_mr_init_dma(struct rxe_pd *pd, int access, struct rxe_mr *mr)
 }
 
 int rxe_mr_init_user(struct rxe_pd *pd, u64 start, u64 length, u64 iova,
-		     int access, struct rxe_mr *mr)
-{
-	struct rxe_map		**map;
-	struct rxe_phys_buf	*buf = NULL;
-	struct ib_umem		*umem;
+	int access, struct rxe_mr *mr) {
+	struct rxe_map **map;
+	struct rxe_phys_buf *buf = NULL;
+	struct ib_umem *umem;
 	struct sg_page_iter	sg_iter;
 	int			num_buf;
-	void			*vaddr;
+	void *vaddr;
 	int err;
 	int i;
 
@@ -130,19 +124,19 @@ int rxe_mr_init_user(struct rxe_pd *pd, u64 start, u64 length, u64 iova,
 	err = rxe_mr_alloc(mr, num_buf);
 	if (err) {
 		pr_warn("%s: Unable to allocate memory for map\n",
-				__func__);
+			__func__);
 		goto err_release_umem;
 	}
 
 	mr->page_shift = PAGE_SHIFT;
 	mr->page_mask = PAGE_SIZE - 1;
 
-	num_buf			= 0;
+	num_buf = 0;
 	map = mr->map;
 	if (length > 0) {
 		buf = map[0]->buf;
 
-		for_each_sgtable_page (&umem->sgt_append.sgt, &sg_iter, 0) {
+		for_each_sgtable_page(&umem->sgt_append.sgt, &sg_iter, 0) {
 			if (num_buf >= RXE_BUF_PER_MAP) {
 				map++;
 				buf = map[0]->buf;
@@ -152,7 +146,7 @@ int rxe_mr_init_user(struct rxe_pd *pd, u64 start, u64 length, u64 iova,
 			vaddr = page_address(sg_page_iter_page(&sg_iter));
 			if (!vaddr) {
 				pr_warn("%s: Unable to get virtual address\n",
-						__func__);
+					__func__);
 				err = -ENOMEM;
 				goto err_cleanup_map;
 			}
@@ -187,8 +181,7 @@ err_out:
 	return err;
 }
 
-int rxe_mr_init_fast(struct rxe_pd *pd, int max_pages, struct rxe_mr *mr)
-{
+int rxe_mr_init_fast(struct rxe_pd *pd, int max_pages, struct rxe_mr *mr) {
 	int err;
 
 	rxe_mr_init(0, mr);
@@ -212,8 +205,7 @@ err1:
 }
 
 static void lookup_iova(struct rxe_mr *mr, u64 iova, int *m_out, int *n_out,
-			size_t *offset_out)
-{
+	size_t *offset_out) {
 	size_t offset = iova - mr->iova + mr->offset;
 	int			map_index;
 	int			buf_index;
@@ -247,8 +239,7 @@ static void lookup_iova(struct rxe_mr *mr, u64 iova, int *m_out, int *n_out,
 	}
 }
 
-void *iova_to_vaddr(struct rxe_mr *mr, u64 iova, int length)
-{
+void *iova_to_vaddr(struct rxe_mr *mr, u64 iova, int length) {
 	size_t offset;
 	int m, n;
 	void *addr;
@@ -288,13 +279,12 @@ out:
  * a mr object starting at iova.
  */
 int rxe_mr_copy(struct rxe_mr *mr, u64 iova, void *addr, int length,
-		enum rxe_mr_copy_dir dir)
-{
+	enum rxe_mr_copy_dir dir) {
 	int			err;
 	int			bytes;
-	u8			*va;
-	struct rxe_map		**map;
-	struct rxe_phys_buf	*buf;
+	u8 *va;
+	struct rxe_map **map;
+	struct rxe_phys_buf *buf;
 	int			m;
 	int			i;
 	size_t			offset;
@@ -325,26 +315,26 @@ int rxe_mr_copy(struct rxe_mr *mr, u64 iova, void *addr, int length,
 	lookup_iova(mr, iova, &m, &i, &offset);
 
 	map = mr->map + m;
-	buf	= map[0]->buf + i;
+	buf = map[0]->buf + i;
 
 	while (length > 0) {
 		u8 *src, *dest;
 
-		va	= (u8 *)(uintptr_t)buf->addr + offset;
+		va = (u8 *)(uintptr_t)buf->addr + offset;
 		src = (dir == RXE_TO_MR_OBJ) ? addr : va;
 		dest = (dir == RXE_TO_MR_OBJ) ? va : addr;
 
-		bytes	= buf->size - offset;
+		bytes = buf->size - offset;
 
 		if (bytes > length)
 			bytes = length;
 
 		memcpy(dest, src, bytes);
 
-		length	-= bytes;
-		addr	+= bytes;
+		length -= bytes;
+		addr += bytes;
 
-		offset	= 0;
+		offset = 0;
 		buf++;
 		i++;
 
@@ -365,18 +355,17 @@ err1:
  * under the control of a dma descriptor
  */
 int copy_data(
-	struct rxe_pd		*pd,
+	struct rxe_pd *pd,
 	int			access,
-	struct rxe_dma_info	*dma,
-	void			*addr,
+	struct rxe_dma_info *dma,
+	void *addr,
 	int			length,
-	enum rxe_mr_copy_dir	dir)
-{
+	enum rxe_mr_copy_dir	dir) {
 	int			bytes;
-	struct rxe_sge		*sge	= &dma->sge[dma->cur_sge];
-	int			offset	= dma->sge_offset;
-	int			resid	= dma->resid;
-	struct rxe_mr		*mr	= NULL;
+	struct rxe_sge *sge = &dma->sge[dma->cur_sge];
+	int			offset = dma->sge_offset;
+	int			resid = dma->resid;
+	struct rxe_mr *mr = NULL;
 	u64			iova;
 	int			err;
 
@@ -415,7 +404,7 @@ int copy_data(
 
 			if (sge->length) {
 				mr = lookup_mr(pd, access, sge->lkey,
-					       RXE_LOOKUP_LOCAL);
+					RXE_LOOKUP_LOCAL);
 				if (!mr) {
 					err = -EINVAL;
 					goto err1;
@@ -435,15 +424,15 @@ int copy_data(
 			if (err)
 				goto err2;
 
-			offset	+= bytes;
-			resid	-= bytes;
-			length	-= bytes;
-			addr	+= bytes;
+			offset += bytes;
+			resid -= bytes;
+			length -= bytes;
+			addr += bytes;
 		}
 	}
 
 	dma->sge_offset = offset;
-	dma->resid	= resid;
+	dma->resid = resid;
 
 	if (mr)
 		rxe_drop_ref(mr);
@@ -457,11 +446,10 @@ err1:
 	return err;
 }
 
-int advance_dma_data(struct rxe_dma_info *dma, unsigned int length)
-{
-	struct rxe_sge		*sge	= &dma->sge[dma->cur_sge];
-	int			offset	= dma->sge_offset;
-	int			resid	= dma->resid;
+int advance_dma_data(struct rxe_dma_info *dma, unsigned int length) {
+	struct rxe_sge *sge = &dma->sge[dma->cur_sge];
+	int			offset = dma->sge_offset;
+	int			resid = dma->resid;
 
 	while (length) {
 		unsigned int bytes;
@@ -479,13 +467,13 @@ int advance_dma_data(struct rxe_dma_info *dma, unsigned int length)
 		if (bytes > sge->length - offset)
 			bytes = sge->length - offset;
 
-		offset	+= bytes;
-		resid	-= bytes;
-		length	-= bytes;
+		offset += bytes;
+		resid -= bytes;
+		length -= bytes;
 	}
 
 	dma->sge_offset = offset;
-	dma->resid	= resid;
+	dma->resid = resid;
 
 	return 0;
 }
@@ -497,8 +485,7 @@ int advance_dma_data(struct rxe_dma_info *dma, unsigned int length)
  * (4) verify that mr state is valid
  */
 struct rxe_mr *lookup_mr(struct rxe_pd *pd, int access, u32 key,
-			 enum rxe_mr_lookup_type type)
-{
+	enum rxe_mr_lookup_type type) {
 	struct rxe_mr *mr;
 	struct rxe_dev *rxe = to_rdev(pd->ibpd.device);
 	int index = key >> 8;
@@ -508,9 +495,9 @@ struct rxe_mr *lookup_mr(struct rxe_pd *pd, int access, u32 key,
 		return NULL;
 
 	if (unlikely((type == RXE_LOOKUP_LOCAL && mr_lkey(mr) != key) ||
-		     (type == RXE_LOOKUP_REMOTE && mr_rkey(mr) != key) ||
-		     mr_pd(mr) != pd || (access && !(access & mr->access)) ||
-		     mr->state != RXE_MR_STATE_VALID)) {
+		(type == RXE_LOOKUP_REMOTE && mr_rkey(mr) != key) ||
+		mr_pd(mr) != pd || (access && !(access & mr->access)) ||
+		mr->state != RXE_MR_STATE_VALID)) {
 		rxe_drop_ref(mr);
 		mr = NULL;
 	}
@@ -518,8 +505,7 @@ struct rxe_mr *lookup_mr(struct rxe_pd *pd, int access, u32 key,
 	return mr;
 }
 
-int rxe_invalidate_mr(struct rxe_qp *qp, u32 rkey)
-{
+int rxe_invalidate_mr(struct rxe_qp *qp, u32 rkey) {
 	struct rxe_dev *rxe = to_rdev(qp->ibqp.device);
 	struct rxe_mr *mr;
 	int ret;
@@ -554,8 +540,7 @@ err:
 	return ret;
 }
 
-int rxe_dereg_mr(struct ib_mr *ibmr, struct ib_udata *udata)
-{
+int rxe_dereg_mr(struct ib_mr *ibmr, struct ib_udata *udata) {
 	struct rxe_mr *mr = to_rmr(ibmr);
 
 	if (atomic_read(&mr->num_mw) > 0) {
@@ -572,8 +557,7 @@ int rxe_dereg_mr(struct ib_mr *ibmr, struct ib_udata *udata)
 	return 0;
 }
 
-void rxe_mr_cleanup(struct rxe_pool_entry *arg)
-{
+void rxe_mr_cleanup(struct rxe_pool_entry *arg) {
 	struct rxe_mr *mr = container_of(arg, typeof(*mr), pelem);
 	int i;
 

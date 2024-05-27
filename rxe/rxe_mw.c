@@ -5,8 +5,7 @@
 
 #include "rxe.h"
 
-int rxe_alloc_mw(struct ib_mw *ibmw, struct ib_udata *udata)
-{
+int rxe_alloc_mw(struct ib_mw *ibmw, struct ib_udata *udata) {
 	struct rxe_mw *mw = to_rmw(ibmw);
 	struct rxe_pd *pd = to_rpd(ibmw->pd);
 	struct rxe_dev *rxe = to_rdev(ibmw->device);
@@ -23,14 +22,13 @@ int rxe_alloc_mw(struct ib_mw *ibmw, struct ib_udata *udata)
 	rxe_add_index(mw);
 	ibmw->rkey = (mw->pelem.index << 8) | rxe_get_next_key(-1);
 	mw->state = (mw->ibmw.type == IB_MW_TYPE_2) ?
-			RXE_MW_STATE_FREE : RXE_MW_STATE_VALID;
+		RXE_MW_STATE_FREE : RXE_MW_STATE_VALID;
 	spin_lock_init(&mw->lock);
 
 	return 0;
 }
 
-static void rxe_do_dealloc_mw(struct rxe_mw *mw)
-{
+static void rxe_do_dealloc_mw(struct rxe_mw *mw) {
 	if (mw->mr) {
 		struct rxe_mr *mr = mw->mr;
 
@@ -52,8 +50,7 @@ static void rxe_do_dealloc_mw(struct rxe_mw *mw)
 	mw->state = RXE_MW_STATE_INVALID;
 }
 
-int rxe_dealloc_mw(struct ib_mw *ibmw)
-{
+int rxe_dealloc_mw(struct ib_mw *ibmw) {
 	struct rxe_mw *mw = to_rmw(ibmw);
 	struct rxe_pd *pd = to_rpd(ibmw->pd);
 	unsigned long flags;
@@ -69,8 +66,7 @@ int rxe_dealloc_mw(struct ib_mw *ibmw)
 }
 
 static int rxe_check_bind_mw(struct rxe_qp *qp, struct rxe_send_wqe *wqe,
-			 struct rxe_mw *mw, struct rxe_mr *mr)
-{
+	struct rxe_mw *mw, struct rxe_mr *mr) {
 	if (mw->ibmw.type == IB_MW_TYPE_1) {
 		if (unlikely(mw->state != RXE_MW_STATE_VALID)) {
 			pr_err_once(
@@ -131,8 +127,8 @@ static int rxe_check_bind_mw(struct rxe_qp *qp, struct rxe_send_wqe *wqe,
 
 	/* C10-74 */
 	if (unlikely((mw->access &
-		      (IB_ACCESS_REMOTE_WRITE | IB_ACCESS_REMOTE_ATOMIC)) &&
-		     !(mr->access & IB_ACCESS_LOCAL_WRITE))) {
+		(IB_ACCESS_REMOTE_WRITE | IB_ACCESS_REMOTE_ATOMIC)) &&
+		!(mr->access & IB_ACCESS_LOCAL_WRITE))) {
 		pr_err_once(
 			"attempt to bind an writeable MW to an MR without local write access\n");
 		return -EINVAL;
@@ -147,8 +143,8 @@ static int rxe_check_bind_mw(struct rxe_qp *qp, struct rxe_send_wqe *wqe,
 		}
 	} else {
 		if (unlikely((wqe->wr.wr.mw.addr < mr->iova) ||
-			     ((wqe->wr.wr.mw.addr + wqe->wr.wr.mw.length) >
-			      (mr->iova + mr->length)))) {
+			((wqe->wr.wr.mw.addr + wqe->wr.wr.mw.length) >
+				(mr->iova + mr->length)))) {
 			pr_err_once(
 				"attempt to bind a VA MW outside of the MR\n");
 			return -EINVAL;
@@ -159,8 +155,7 @@ static int rxe_check_bind_mw(struct rxe_qp *qp, struct rxe_send_wqe *wqe,
 }
 
 static void rxe_do_bind_mw(struct rxe_qp *qp, struct rxe_send_wqe *wqe,
-		      struct rxe_mw *mw, struct rxe_mr *mr)
-{
+	struct rxe_mw *mw, struct rxe_mr *mr) {
 	u32 rkey;
 	u32 new_rkey;
 
@@ -191,8 +186,7 @@ static void rxe_do_bind_mw(struct rxe_qp *qp, struct rxe_send_wqe *wqe,
 	}
 }
 
-int rxe_bind_mw(struct rxe_qp *qp, struct rxe_send_wqe *wqe)
-{
+int rxe_bind_mw(struct rxe_qp *qp, struct rxe_send_wqe *wqe) {
 	int ret;
 	struct rxe_mw *mw;
 	struct rxe_mr *mr;
@@ -200,7 +194,7 @@ int rxe_bind_mw(struct rxe_qp *qp, struct rxe_send_wqe *wqe)
 	unsigned long flags;
 
 	mw = rxe_pool_get_index(&rxe->mw_pool,
-				wqe->wr.wr.mw.mw_rkey >> 8);
+		wqe->wr.wr.mw.mw_rkey >> 8);
 	if (unlikely(!mw)) {
 		ret = -EINVAL;
 		goto err;
@@ -213,7 +207,7 @@ int rxe_bind_mw(struct rxe_qp *qp, struct rxe_send_wqe *wqe)
 
 	if (likely(wqe->wr.wr.mw.length)) {
 		mr = rxe_pool_get_index(&rxe->mr_pool,
-					wqe->wr.wr.mw.mr_lkey >> 8);
+			wqe->wr.wr.mw.mr_lkey >> 8);
 		if (unlikely(!mr)) {
 			ret = -EINVAL;
 			goto err_drop_mw;
@@ -245,8 +239,7 @@ err:
 	return ret;
 }
 
-static int rxe_check_invalidate_mw(struct rxe_qp *qp, struct rxe_mw *mw)
-{
+static int rxe_check_invalidate_mw(struct rxe_qp *qp, struct rxe_mw *mw) {
 	if (unlikely(mw->state == RXE_MW_STATE_INVALID))
 		return -EINVAL;
 
@@ -257,8 +250,7 @@ static int rxe_check_invalidate_mw(struct rxe_qp *qp, struct rxe_mw *mw)
 	return 0;
 }
 
-static void rxe_do_invalidate_mw(struct rxe_mw *mw)
-{
+static void rxe_do_invalidate_mw(struct rxe_mw *mw) {
 	struct rxe_qp *qp;
 	struct rxe_mr *mr;
 
@@ -279,8 +271,7 @@ static void rxe_do_invalidate_mw(struct rxe_mw *mw)
 	mw->state = RXE_MW_STATE_FREE;
 }
 
-int rxe_invalidate_mw(struct rxe_qp *qp, u32 rkey)
-{
+int rxe_invalidate_mw(struct rxe_qp *qp, u32 rkey) {
 	struct rxe_dev *rxe = to_rdev(qp->ibqp.device);
 	unsigned long flags;
 	struct rxe_mw *mw;
@@ -312,8 +303,7 @@ err:
 	return ret;
 }
 
-struct rxe_mw *rxe_lookup_mw(struct rxe_qp *qp, int access, u32 rkey)
-{
+struct rxe_mw *rxe_lookup_mw(struct rxe_qp *qp, int access, u32 rkey) {
 	struct rxe_dev *rxe = to_rdev(qp->ibqp.device);
 	struct rxe_pd *pd = to_rpd(qp->ibqp.pd);
 	struct rxe_mw *mw;
@@ -324,10 +314,10 @@ struct rxe_mw *rxe_lookup_mw(struct rxe_qp *qp, int access, u32 rkey)
 		return NULL;
 
 	if (unlikely((rxe_mw_rkey(mw) != rkey) || rxe_mw_pd(mw) != pd ||
-		     (mw->ibmw.type == IB_MW_TYPE_2 && mw->qp != qp) ||
-		     (mw->length == 0) ||
-		     (access && !(access & mw->access)) ||
-		     mw->state != RXE_MW_STATE_VALID)) {
+		(mw->ibmw.type == IB_MW_TYPE_2 && mw->qp != qp) ||
+		(mw->length == 0) ||
+		(access && !(access & mw->access)) ||
+		mw->state != RXE_MW_STATE_VALID)) {
 		rxe_drop_ref(mw);
 		return NULL;
 	}
@@ -335,8 +325,7 @@ struct rxe_mw *rxe_lookup_mw(struct rxe_qp *qp, int access, u32 rkey)
 	return mw;
 }
 
-void rxe_mw_cleanup(struct rxe_pool_entry *elem)
-{
+void rxe_mw_cleanup(struct rxe_pool_entry *elem) {
 	struct rxe_mw *mw = container_of(elem, typeof(*mw), pelem);
 
 	rxe_drop_index(mw);

@@ -8,9 +8,9 @@
 #define RXE_TASK_H
 
 enum {
-	TASK_STATE_START	= 0,
-	TASK_STATE_BUSY		= 1,
-	TASK_STATE_ARMED	= 2,
+	TASK_STATE_START = 0,
+	TASK_STATE_BUSY = 1,
+	TASK_STATE_ARMED = 2,
 };
 
 /*
@@ -19,11 +19,11 @@ enum {
  * called again.
  */
 struct rxe_task {
-	void			*obj;
+	void *obj;
 	struct tasklet_struct	tasklet;
 	int			state;
 	spinlock_t		state_lock; /* spinlock for task state */
-	void			*arg;
+	void *arg;
 	int			(*func)(void *arg);
 	int			ret;
 	char			name[16];
@@ -36,7 +36,7 @@ struct rxe_task {
  *	func => function to call until it returns != 0
  */
 int rxe_init_task(void *obj, struct rxe_task *task,
-		  void *arg, int (*func)(void *), char *name);
+	void *arg, int (*func)(void *), char *name);
 
 /* cleanup task */
 void rxe_cleanup_task(struct rxe_task *task);

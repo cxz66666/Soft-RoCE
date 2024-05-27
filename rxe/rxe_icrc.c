@@ -9,20 +9,19 @@
 #include "rxe.h"
 #include "rxe_loc.h"
 
-/**
- * rxe_icrc_init() - Initialize crypto function for computing crc32
- * @rxe: rdma_rxe device object
- *
- * Return: 0 on success else an error
- */
-int rxe_icrc_init(struct rxe_dev *rxe)
-{
+ /**
+  * rxe_icrc_init() - Initialize crypto function for computing crc32
+  * @rxe: rdma_rxe device object
+  *
+  * Return: 0 on success else an error
+  */
+int rxe_icrc_init(struct rxe_dev *rxe) {
 	struct crypto_shash *tfm;
 
 	tfm = crypto_alloc_shash("crc32", 0, 0);
 	if (IS_ERR(tfm)) {
 		pr_warn("failed to init crc32 algorithm err:%ld\n",
-			       PTR_ERR(tfm));
+			PTR_ERR(tfm));
 		return PTR_ERR(tfm);
 	}
 
@@ -40,8 +39,7 @@ int rxe_icrc_init(struct rxe_dev *rxe)
  *
  * Return: the cumulative crc32 checksum
  */
-static __be32 rxe_crc32(struct rxe_dev *rxe, __be32 crc, void *next, size_t len)
-{
+static __be32 rxe_crc32(struct rxe_dev *rxe, __be32 crc, void *next, size_t len) {
 	__be32 icrc;
 	int err;
 
@@ -69,8 +67,7 @@ static __be32 rxe_crc32(struct rxe_dev *rxe, __be32 crc, void *next, size_t len)
  *
  * Return: the partial ICRC
  */
-static __be32 rxe_icrc_hdr(struct sk_buff *skb, struct rxe_pkt_info *pkt)
-{
+static __be32 rxe_icrc_hdr(struct sk_buff *skb, struct rxe_pkt_info *pkt) {
 	unsigned int bth_offset = 0;
 	struct iphdr *ip4h = NULL;
 	struct ipv6hdr *ip6h = NULL;
@@ -80,7 +77,7 @@ static __be32 rxe_icrc_hdr(struct sk_buff *skb, struct rxe_pkt_info *pkt)
 	int length;
 	int hdr_size = sizeof(struct udphdr) +
 		(skb->protocol == htons(ETH_P_IP) ?
-		sizeof(struct iphdr) : sizeof(struct ipv6hdr));
+			sizeof(struct iphdr) : sizeof(struct ipv6hdr));
 	/* pseudo header buffer size is calculate using ipv6 header size since
 	 * it is bigger than ipv4
 	 */
@@ -125,7 +122,7 @@ static __be32 rxe_icrc_hdr(struct sk_buff *skb, struct rxe_pkt_info *pkt)
 
 	/* And finish to compute the CRC on the remainder of the headers. */
 	crc = rxe_crc32(pkt->rxe, crc, pkt->hdr + RXE_BTH_BYTES,
-			rxe_opcode[pkt->opcode].length - RXE_BTH_BYTES);
+		rxe_opcode[pkt->opcode].length - RXE_BTH_BYTES);
 	return crc;
 }
 
@@ -137,8 +134,7 @@ static __be32 rxe_icrc_hdr(struct sk_buff *skb, struct rxe_pkt_info *pkt)
  *
  * Return: 0 if the values match else an error
  */
-int rxe_icrc_check(struct sk_buff *skb, struct rxe_pkt_info *pkt)
-{
+int rxe_icrc_check(struct sk_buff *skb, struct rxe_pkt_info *pkt) {
 	__be32 *icrcp;
 	__be32 pkt_icrc;
 	__be32 icrc;
@@ -148,16 +144,16 @@ int rxe_icrc_check(struct sk_buff *skb, struct rxe_pkt_info *pkt)
 
 	icrc = rxe_icrc_hdr(skb, pkt);
 	icrc = rxe_crc32(pkt->rxe, icrc, (u8 *)payload_addr(pkt),
-				payload_size(pkt) + bth_pad(pkt));
+		payload_size(pkt) + bth_pad(pkt));
 	icrc = ~icrc;
 
 	if (unlikely(icrc != pkt_icrc)) {
 		if (skb->protocol == htons(ETH_P_IPV6))
 			pr_warn_ratelimited("bad ICRC from %pI6c\n",
-					    &ipv6_hdr(skb)->saddr);
+				&ipv6_hdr(skb)->saddr);
 		else if (skb->protocol == htons(ETH_P_IP))
 			pr_warn_ratelimited("bad ICRC from %pI4\n",
-					    &ip_hdr(skb)->saddr);
+				&ip_hdr(skb)->saddr);
 		else
 			pr_warn_ratelimited("bad ICRC from unknown\n");
 
@@ -172,14 +168,13 @@ int rxe_icrc_check(struct sk_buff *skb, struct rxe_pkt_info *pkt)
  * @skb: packet buffer
  * @pkt: packet information
  */
-void rxe_icrc_generate(struct sk_buff *skb, struct rxe_pkt_info *pkt)
-{
+void rxe_icrc_generate(struct sk_buff *skb, struct rxe_pkt_info *pkt) {
 	__be32 *icrcp;
 	__be32 icrc;
 
 	icrcp = (__be32 *)(pkt->hdr + pkt->paylen - RXE_ICRC_SIZE);
 	icrc = rxe_icrc_hdr(skb, pkt);
 	icrc = rxe_crc32(pkt->rxe, icrc, (u8 *)payload_addr(pkt),
-				payload_size(pkt) + bth_pad(pkt));
+		payload_size(pkt) + bth_pad(pkt));
 	*icrcp = ~icrc;
 }

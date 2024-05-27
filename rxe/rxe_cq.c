@@ -9,8 +9,7 @@
 #include "rxe_queue.h"
 
 int rxe_cq_chk_attr(struct rxe_dev *rxe, struct rxe_cq *cq,
-		    int cqe, int comp_vector)
-{
+	int cqe, int comp_vector) {
 	int count;
 
 	if (cqe <= 0) {
@@ -43,8 +42,7 @@ err1:
 	return -EINVAL;
 }
 
-static void rxe_send_complete(struct tasklet_struct *t)
-{
+static void rxe_send_complete(struct tasklet_struct *t) {
 	struct rxe_cq *cq = from_tasklet(cq, t, comp_task);
 	unsigned long flags;
 
@@ -59,22 +57,21 @@ static void rxe_send_complete(struct tasklet_struct *t)
 }
 
 int rxe_cq_from_init(struct rxe_dev *rxe, struct rxe_cq *cq, int cqe,
-		     int comp_vector, struct ib_udata *udata,
-		     struct rxe_create_cq_resp __user *uresp)
-{
+	int comp_vector, struct ib_udata *udata,
+	struct rxe_create_cq_resp __user *uresp) {
 	int err;
 	enum queue_type type;
 
 	type = uresp ? QUEUE_TYPE_TO_USER : QUEUE_TYPE_KERNEL;
 	cq->queue = rxe_queue_init(rxe, &cqe,
-			sizeof(struct rxe_cqe), type);
+		sizeof(struct rxe_cqe), type);
 	if (!cq->queue) {
 		pr_warn("unable to create cq\n");
 		return -ENOMEM;
 	}
 
 	err = do_mmap_info(rxe, uresp ? &uresp->mi : NULL, udata,
-			   cq->queue->buf, cq->queue->buf_size, &cq->queue->ip);
+		cq->queue->buf, cq->queue->buf_size, &cq->queue->ip);
 	if (err) {
 		vfree(cq->queue->buf);
 		kfree(cq->queue);
@@ -94,22 +91,20 @@ int rxe_cq_from_init(struct rxe_dev *rxe, struct rxe_cq *cq, int cqe,
 }
 
 int rxe_cq_resize_queue(struct rxe_cq *cq, int cqe,
-			struct rxe_resize_cq_resp __user *uresp,
-			struct ib_udata *udata)
-{
+	struct rxe_resize_cq_resp __user *uresp,
+	struct ib_udata *udata) {
 	int err;
 
 	err = rxe_queue_resize(cq->queue, (unsigned int *)&cqe,
-			       sizeof(struct rxe_cqe), udata,
-			       uresp ? &uresp->mi : NULL, NULL, &cq->cq_lock);
+		sizeof(struct rxe_cqe), udata,
+		uresp ? &uresp->mi : NULL, NULL, &cq->cq_lock);
 	if (!err)
 		cq->ibcq.cqe = cqe;
 
 	return err;
 }
 
-int rxe_cq_post(struct rxe_cq *cq, struct rxe_cqe *cqe, int solicited)
-{
+int rxe_cq_post(struct rxe_cq *cq, struct rxe_cqe *cqe, int solicited) {
 	struct ib_event ev;
 	unsigned long flags;
 	int full;
@@ -149,7 +144,7 @@ int rxe_cq_post(struct rxe_cq *cq, struct rxe_cqe *cqe, int solicited)
 	spin_unlock_irqrestore(&cq->cq_lock, flags);
 
 	if ((cq->notify == IB_CQ_NEXT_COMP) ||
-	    (cq->notify == IB_CQ_SOLICITED && solicited)) {
+		(cq->notify == IB_CQ_SOLICITED && solicited)) {
 		cq->notify = 0;
 		tasklet_schedule(&cq->comp_task);
 	}
@@ -157,8 +152,7 @@ int rxe_cq_post(struct rxe_cq *cq, struct rxe_cqe *cqe, int solicited)
 	return 0;
 }
 
-void rxe_cq_disable(struct rxe_cq *cq)
-{
+void rxe_cq_disable(struct rxe_cq *cq) {
 	unsigned long flags;
 
 	spin_lock_irqsave(&cq->cq_lock, flags);
@@ -166,8 +160,7 @@ void rxe_cq_disable(struct rxe_cq *cq)
 	spin_unlock_irqrestore(&cq->cq_lock, flags);
 }
 
-void rxe_cq_cleanup(struct rxe_pool_entry *arg)
-{
+void rxe_cq_cleanup(struct rxe_pool_entry *arg) {
 	struct rxe_cq *cq = container_of(arg, typeof(*cq), pelem);
 
 	if (cq->queue)

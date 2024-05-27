@@ -7,9 +7,8 @@
 #include "rxe.h"
 #include "rxe_net.h"
 
-/* Copy argument and remove trailing CR. Return the new length. */
-static int sanitize_arg(const char *val, char *intf, int intf_len)
-{
+ /* Copy argument and remove trailing CR. Return the new length. */
+static int sanitize_arg(const char *val, char *intf, int intf_len) {
 	int len;
 
 	if (!val)
@@ -26,8 +25,7 @@ static int sanitize_arg(const char *val, char *intf, int intf_len)
 	return len;
 }
 
-static int rxe_param_set_add(const char *val, const struct kernel_param *kp)
-{
+static int rxe_param_set_add(const char *val, const struct kernel_param *kp) {
 	int len;
 	int err = 0;
 	char intf[32];
@@ -76,8 +74,7 @@ err:
 	return err;
 }
 
-static int rxe_param_set_remove(const char *val, const struct kernel_param *kp)
-{
+static int rxe_param_set_remove(const char *val, const struct kernel_param *kp) {
 	int len;
 	char intf[32];
 	struct ib_device *ib_dev;

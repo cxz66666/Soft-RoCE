@@ -31,10 +31,10 @@
 #include "rxe_verbs.h"
 #include "rxe_loc.h"
 
-/*
- * Version 1 and Version 2 are identical on 64 bit machines, but on 32 bit
- * machines Version 2 has a different struct layout.
- */
+ /*
+  * Version 1 and Version 2 are identical on 64 bit machines, but on 32 bit
+  * machines Version 2 has a different struct layout.
+  */
 #define RXE_UVERBS_ABI_VERSION		2
 
 #define RXE_ROCE_V2_SPORT		(0xc000)
@@ -48,8 +48,7 @@ int rxe_add(struct rxe_dev *rxe, unsigned int mtu, const char *ibdev_name);
 void rxe_rcv(struct sk_buff *skb);
 
 /* The caller must do a matching ib_device_put(&dev->ib_dev) */
-static inline struct rxe_dev *rxe_get_dev_from_net(struct net_device *ndev)
-{
+static inline struct rxe_dev *rxe_get_dev_from_net(struct net_device *ndev) {
 	struct ib_device *ibdev =
 		ib_device_get_by_netdev(ndev, RDMA_DRIVER_RXE);
 

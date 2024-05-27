@@ -28,8 +28,7 @@ int __rxe_do_task(struct rxe_task *task)
  * a second caller finds the task already running
  * but looks just after the last call to func
  */
-void rxe_do_task(struct tasklet_struct *t)
-{
+void rxe_do_task(struct tasklet_struct *t) {
 	int cont;
 	int ret;
 	unsigned long flags;
@@ -68,10 +67,10 @@ void rxe_do_task(struct tasklet_struct *t)
 				cont = 1;
 			break;
 
-		/* soneone tried to run the task since the last time we called
-		 * func, so we will call one more time regardless of the
-		 * return value
-		 */
+			/* soneone tried to run the task since the last time we called
+			 * func, so we will call one more time regardless of the
+			 * return value
+			 */
 		case TASK_STATE_ARMED:
 			task->state = TASK_STATE_BUSY;
 			cont = 1;
@@ -88,13 +87,12 @@ void rxe_do_task(struct tasklet_struct *t)
 }
 
 int rxe_init_task(void *obj, struct rxe_task *task,
-		  void *arg, int (*func)(void *), char *name)
-{
-	task->obj	= obj;
-	task->arg	= arg;
-	task->func	= func;
+	void *arg, int (*func)(void *), char *name) {
+	task->obj = obj;
+	task->arg = arg;
+	task->func = func;
 	snprintf(task->name, sizeof(task->name), "%s", name);
-	task->destroyed	= false;
+	task->destroyed = false;
 
 	tasklet_setup(&task->tasklet, rxe_do_task);
 
@@ -104,8 +102,7 @@ int rxe_init_task(void *obj, struct rxe_task *task,
 	return 0;
 }
 
-void rxe_cleanup_task(struct rxe_task *task)
-{
+void rxe_cleanup_task(struct rxe_task *task) {
 	unsigned long flags;
 	bool idle;
 
@@ -124,8 +121,7 @@ void rxe_cleanup_task(struct rxe_task *task)
 	tasklet_kill(&task->tasklet);
 }
 
-void rxe_run_task(struct rxe_task *task, int sched)
-{
+void rxe_run_task(struct rxe_task *task, int sched) {
 	if (task->destroyed)
 		return;
 
@@ -135,12 +131,10 @@ void rxe_run_task(struct rxe_task *task, int sched)
 		rxe_do_task(&task->tasklet);
 }
 
-void rxe_disable_task(struct rxe_task *task)
-{
+void rxe_disable_task(struct rxe_task *task) {
 	tasklet_disable(&task->tasklet);
 }
 
-void rxe_enable_task(struct rxe_task *task)
-{
+void rxe_enable_task(struct rxe_task *task) {
 	tasklet_enable(&task->tasklet);
 }
