@@ -372,9 +372,10 @@ void rxe_rcv(struct sk_buff *skb) {
 	if (unlikely(err))
 		goto drop;
 
-	err = rxe_icrc_check(skb, pkt);
-	if (unlikely(err))
-		goto drop;
+	// disable icrc check
+	// err = rxe_icrc_check(skb, pkt);
+	// if (unlikely(err))
+	// 	goto drop;
 
 	rxe_counter_inc(rxe, RXE_CNT_RCVD_PKTS);
 
