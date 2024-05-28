@@ -262,6 +262,11 @@ struct rxe_qp {
 	spinlock_t		state_lock; /* guard requester and completer */
 
 	struct execute_work	cleanup_work;
+
+	// used for timely algorithm
+	uint64_t timely_rate;
+	uint64_t timely_timer;
+	uint64_t timely_rtt_diff;
 };
 
 enum rxe_mr_state {

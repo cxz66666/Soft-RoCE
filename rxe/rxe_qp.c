@@ -353,6 +353,12 @@ int rxe_qp_from_init(struct rxe_dev *rxe, struct rxe_qp *qp, struct rxe_pd *pd,
 	qp->attr.qp_state = IB_QPS_RESET;
 	qp->valid = 1;
 
+#ifdef RXE_USE_TIMELY_ALGO
+	// added for timely 
+	qp->timely_rate = 11500;
+	qp->timely_timer = 0;
+	qp->timely_rtt_diff = 0;
+#endif 
 	return 0;
 
 err2:

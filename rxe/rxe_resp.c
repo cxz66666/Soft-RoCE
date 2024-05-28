@@ -955,6 +955,16 @@ static int send_ack(struct rxe_qp *qp, struct rxe_pkt_info *pkt,
 		goto err1;
 	}
 
+#ifdef RXE_USE_TIMELY_ALGO
+	// add timestamp for calculate
+	// need to add timestamp
+	if (rxe_opcode[pkt->opcode].offset[RXE_TIMELY_TIMESTAMP] != 0) {
+		uint64_t pkt_timestamp;
+		pkt_timestamp = *(uint64_t *)(pkt->hdr + rxe_opcode[pkt->opcode].offset[RXE_TIMELY_TIMESTAMP]);
+		*(uint64_t *)(ack_pkt.hdr + rxe_opcode[IB_OPCODE_RC_ACKNOWLEDGE].offset[RXE_TIMELY_TIMESTAMP]) = pkt_timestamp;
+	}
+#endif
+
 	err = rxe_xmit_packet(qp, &ack_pkt, skb);
 	if (err)
 		pr_err_ratelimited("Failed sending ack\n");

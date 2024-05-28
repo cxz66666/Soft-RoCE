@@ -49,6 +49,8 @@ enum rxe_hdr_type {
 	RXE_DETH,
 	RXE_IMMDT,
 	RXE_PAYLOAD,
+	// used for custom calculate
+	RXE_TIMELY_TIMESTAMP,
 	NUM_HDR_TYPES
 };
 

@@ -31,6 +31,8 @@
 #include "rxe_verbs.h"
 #include "rxe_loc.h"
 
+#include "cc_algo/cc_algo.h"
+
  /*
   * Version 1 and Version 2 are identical on 64 bit machines, but on 32 bit
   * machines Version 2 has a different struct layout.

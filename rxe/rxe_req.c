@@ -731,6 +731,12 @@ next_wqe:
 	save_state(wqe, qp, &rollback_wqe, &rollback_psn);
 	update_wqe_state(qp, wqe, &pkt);
 	update_wqe_psn(qp, wqe, &pkt, payload);
+
+#ifdef RXE_USE_TIMELY_ALGO
+	// add timely send check
+	timely_send_check(qp, &pkt, payload);
+#endif
+
 	ret = rxe_xmit_packet(qp, &pkt, skb);
 	if (ret) {
 		qp->need_req_skb = 1;
