@@ -267,6 +267,17 @@ struct rxe_qp {
 	uint64_t timely_rate;
 	uint64_t timely_timer;
 	uint64_t timely_rtt_diff;
+
+	//used for DCQCN algorithm
+	uint64_t dcqcn_rate;
+	uint64_t dcqcn_timer;
+	uint64_t dcqcn_byte_count;
+	uint64_t dcqcn_now_time;
+	uint64_t dcqcn_last_time;
+	uint64_t dcqcn_t;
+	uint64_t dcqcn_bc;
+	uint64_t dcqcn_rt;
+	uint64_t dcqcn_A;
 };
 
 enum rxe_mr_state {

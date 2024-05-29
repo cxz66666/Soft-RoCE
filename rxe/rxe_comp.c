@@ -283,6 +283,9 @@ static inline enum comp_state check_ack(struct rxe_qp *qp,
 #ifdef RXE_USE_TIMELY_ALGO
 			// used for timely algorithm
 			timely_recv_ack(qp, pkt);
+#elif defined(RXE_USE_DCQCN_ALGO)
+			//used for dcqcn algorithm
+			dcqcn_recv_ack(qp, pkt);
 #endif
 			return COMPST_WRITE_SEND;
 

@@ -3,13 +3,16 @@
 
 
 // if use timely algorithm
-#define RXE_USE_TIMELY_ALGO
-
+// #define RXE_USE_TIMELY_ALGO
+// #define RXE_USE_DCQCN_ALGO
 
 
 #ifdef RXE_USE_TIMELY_ALGO
 #include "timely.h"
 #endif
 
+#ifdef RXE_USE_DCQCN_ALGO
+#include "dcqcn.h"
+#endif
 
 #endif  

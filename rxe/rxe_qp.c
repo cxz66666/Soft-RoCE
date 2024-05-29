@@ -358,6 +358,17 @@ int rxe_qp_from_init(struct rxe_dev *rxe, struct rxe_qp *qp, struct rxe_pd *pd,
 	qp->timely_rate = 11500;
 	qp->timely_timer = 0;
 	qp->timely_rtt_diff = 0;
+#elif defined(RXE_USE_DCQCN_ALGO)
+	qp->dcqcn_rate = 11500;
+	qp->dcqcn_rt = 11500;
+	// TODO warning
+	qp->dcqcn_A = 256;
+	qp->dcqcn_timer = 0;
+	qp->dcqcn_now_time = 0;
+	qp->dcqcn_last_time = 0;
+	qp->dcqcn_bc = 0;
+	qp->dcqcn_t = 0;
+	qp->dcqcn_byte_count = 0;
 #endif 
 	return 0;
 

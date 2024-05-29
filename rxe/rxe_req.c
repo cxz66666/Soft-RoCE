@@ -735,6 +735,8 @@ next_wqe:
 #ifdef RXE_USE_TIMELY_ALGO
 	// add timely send check
 	timely_send_check(qp, &pkt, payload);
+#elif defined(RXE_USE_DCQCN_ALGO)
+	dcqcn_send_check(qp, &pkt, payload);
 #endif
 
 	ret = rxe_xmit_packet(qp, &pkt, skb);

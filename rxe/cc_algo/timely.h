@@ -12,7 +12,7 @@
 
 static const uint64_t timely_rdtsc_mul = 2200; // 1ns = 2.2 cpu cycles
 
-static inline int check_credit_success(struct rxe_qp *qp, int payload) {
+static inline int timely_check_credit(struct rxe_qp *qp, int payload) {
     return qp->timely_rate * (rdtsc() - qp->timely_timer) < timely_rdtsc_mul * payload ? 0 : 1;
 }
 
@@ -21,9 +21,20 @@ static inline void timely_send_check(struct rxe_qp *qp, struct rxe_pkt_info *pkt
     if (rxe_opcode[pkt->opcode].offset[RXE_TIMELY_TIMESTAMP] == 0) {
         return;
     }
-    while (!check_credit_success(qp, payload)) {}
+    while (!timely_check_credit(qp, payload)) {}
     qp->timely_timer = rdtsc();
     *(uint64_t *)(pkt->hdr + rxe_opcode[pkt->opcode].offset[RXE_TIMELY_TIMESTAMP]) = qp->timely_timer;
+}
+
+static inline void timely_recv_pkt(struct rxe_qp *qp, struct rxe_pkt_info *pkt, struct rxe_pkt_info *ack_pkt) {
+    // add timestamp for calculate
+    // need to add timestamp
+    uint64_t pkt_timestamp;
+    if (rxe_opcode[pkt->opcode].offset[RXE_TIMELY_TIMESTAMP] == 0) {
+        return;
+    }
+    pkt_timestamp = *(uint64_t *)(pkt->hdr + rxe_opcode[pkt->opcode].offset[RXE_TIMELY_TIMESTAMP]);
+    *(uint64_t *)(ack_pkt->hdr + rxe_opcode[IB_OPCODE_RC_ACKNOWLEDGE].offset[RXE_TIMELY_TIMESTAMP]) = pkt_timestamp;
 }
 
 static inline void timely_recv_ack(struct rxe_qp *qp, struct rxe_pkt_info *pkt) {

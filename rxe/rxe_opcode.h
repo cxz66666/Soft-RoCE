@@ -49,8 +49,10 @@ enum rxe_hdr_type {
 	RXE_DETH,
 	RXE_IMMDT,
 	RXE_PAYLOAD,
-	// used for custom calculate
+	// used for timely algorithm
 	RXE_TIMELY_TIMESTAMP,
+	// used for dcqcn algorithm
+	RXE_DCQCN_ECN,
 	NUM_HDR_TYPES
 };
 
