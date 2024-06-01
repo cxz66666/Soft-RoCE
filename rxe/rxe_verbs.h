@@ -285,6 +285,11 @@ struct rxe_qp {
 	uint64_t hpcc_seq;
 	uint64_t hpcc_last_update_seq;
 	uint64_t hpcc_B;
+	uint64_t hpcc_txbyte;
+	uint64_t hpcc_qlen;
+	uint64_t hpcc_ts;
+	uint64_t hpcc_U;
+	uint64_t hpcc_inc_stage;
 };
 
 enum rxe_mr_state {

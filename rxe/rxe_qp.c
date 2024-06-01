@@ -370,11 +370,16 @@ int rxe_qp_from_init(struct rxe_dev *rxe, struct rxe_qp *qp, struct rxe_pd *pd,
 	qp->dcqcn_t = 0;
 	qp->dcqcn_byte_count = 0;
 #elif defined(RXE_USE_HPCC_ALGO)
+	qp->hpcc_window = 6174;
 	qp->hpcc_B = 11500;
 	qp->hpcc_flying_bytes = 0;
 	qp->hpcc_last_update_seq = 0;
-	qp->hpcc_window = 6174;
 	qp->hpcc_seq = 0;
+	qp->hpcc_txbyte = 0;
+	qp->hpcc_qlen = 0;
+	qp->hpcc_ts = 0;
+	qp->hpcc_U = 10000;
+	qp->hpcc_inc_stage = 0;
 #endif 
 	return 0;
 
