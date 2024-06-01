@@ -1,16 +1,17 @@
 #ifndef RXE_TIMELY
 #define RXE_TIMELY
 
+static const uint64_t timely_rdtsc_mul = 2200; // 1ns = 2.2 cpu cycles
+
 // TODO THIS NEED MORE TEST FOR PARAMS!
-#define TIMELY_MINRTT 512 
-#define TIMELY_T_LOW 600 
-#define TIMELY_T_HIGH 2000 
+#define TIMELY_MINRTT (30 * timely_rdtsc_mul) 
+#define TIMELY_T_LOW (50 * timely_rdtsc_mul) 
+#define TIMELY_T_HIGH (500 * timely_rdtsc_mul)
 #define TIMELY_RAI   5 
 #define TIMELY_A 875
 #define TIMELY_B 800
 
 
-static const uint64_t timely_rdtsc_mul = 2200; // 1ns = 2.2 cpu cycles
 
 static inline int timely_check_credit(struct rxe_qp *qp, int payload) {
     return qp->timely_rate * (rdtsc() - qp->timely_timer) < timely_rdtsc_mul * payload ? 0 : 1;
@@ -34,7 +35,7 @@ static inline void timely_recv_pkt(struct rxe_qp *qp, struct rxe_pkt_info *pkt, 
         return;
     }
     pkt_timestamp = *(uint64_t *)(pkt->hdr + rxe_opcode[pkt->opcode].offset[RXE_TIMELY_TIMESTAMP]);
-    *(uint64_t *)(ack_pkt->hdr + rxe_opcode[IB_OPCODE_RC_ACKNOWLEDGE].offset[RXE_TIMELY_TIMESTAMP]) = pkt_timestamp;
+    *(uint64_t *)(ack_pkt->hdr + rxe_opcode[ack_pkt->opcode].offset[RXE_TIMELY_TIMESTAMP]) = pkt_timestamp;
 }
 
 static inline void timely_recv_ack(struct rxe_qp *qp, struct rxe_pkt_info *pkt) {
