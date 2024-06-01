@@ -959,6 +959,8 @@ static int send_ack(struct rxe_qp *qp, struct rxe_pkt_info *pkt,
 	timely_recv_pkt(qp, pkt, &ack_pkt);
 #elif defined(RXE_USE_DCQCN_ALGO)
 	dcqcn_recv_pkt(qp, pkt, &ack_pkt);
+#elif defined(RXE_USE_HPCC_ALGO)
+	hpcc_recv_pkt(qp, pkt, &ack_pkt);
 #endif
 
 	err = rxe_xmit_packet(qp, &ack_pkt, skb);

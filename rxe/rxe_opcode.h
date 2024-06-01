@@ -53,6 +53,7 @@ enum rxe_hdr_type {
 	RXE_TIMELY_TIMESTAMP,
 	// used for dcqcn algorithm
 	RXE_DCQCN_ECN,
+	RXE_HPCC_HEADER,
 	NUM_HDR_TYPES
 };
 

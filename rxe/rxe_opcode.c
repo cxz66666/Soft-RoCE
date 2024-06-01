@@ -10,6 +10,7 @@
 
 #define TIMELY_TIMESTAMP_SIZE 8
 #define DCQCN_ECN_SIZE 4
+#define HPCC_SIZE 32
  /* useful information about work request opcodes and pkt opcodes in
   * table form
   */
@@ -230,6 +231,47 @@ struct rxe_opcode_info rxe_opcode[RXE_NUM_OPCODE] = {
 			[RXE_DCQCN_ECN] = RXE_BTH_BYTES + RXE_AETH_BYTES,
 			[RXE_PAYLOAD] = RXE_BTH_BYTES
 						+ RXE_AETH_BYTES + DCQCN_ECN_SIZE,
+		}
+	},
+#elif defined(RXE_USE_HPCC_ALGO)
+	[IB_OPCODE_RC_SEND_ONLY] = {
+		.name = "IB_OPCODE_RC_SEND_ONLY",
+		.mask = RXE_PAYLOAD_MASK | RXE_REQ_MASK | RXE_COMP_MASK
+				| RXE_RWR_MASK | RXE_SEND_MASK
+				| RXE_START_MASK | RXE_END_MASK,
+		.length = RXE_BTH_BYTES + HPCC_SIZE,
+		.offset = {
+			[RXE_BTH] = 0,
+			[RXE_HPCC_HEADER] = RXE_BTH_BYTES,
+			[RXE_PAYLOAD] = RXE_BTH_BYTES + HPCC_SIZE,
+		}
+	},
+	[IB_OPCODE_RC_SEND_ONLY_WITH_IMMEDIATE] = {
+		.name = "IB_OPCODE_RC_SEND_ONLY_WITH_IMMEDIATE",
+		.mask = RXE_IMMDT_MASK | RXE_PAYLOAD_MASK | RXE_REQ_MASK
+				| RXE_COMP_MASK | RXE_RWR_MASK | RXE_SEND_MASK
+				| RXE_START_MASK | RXE_END_MASK,
+		.length = RXE_BTH_BYTES + RXE_IMMDT_BYTES + HPCC_SIZE,
+		.offset = {
+			[RXE_BTH] = 0,
+			[RXE_IMMDT] = RXE_BTH_BYTES,
+			[RXE_HPCC_HEADER] = RXE_BTH_BYTES
+						+ RXE_IMMDT_BYTES,
+			[RXE_PAYLOAD] = RXE_BTH_BYTES
+						+ RXE_IMMDT_BYTES + HPCC_SIZE,
+		}
+	},
+	[IB_OPCODE_RC_ACKNOWLEDGE] = {
+		.name = "IB_OPCODE_RC_ACKNOWLEDGE",
+		.mask = RXE_AETH_MASK | RXE_ACK_MASK | RXE_START_MASK
+				| RXE_END_MASK,
+		.length = RXE_BTH_BYTES + RXE_AETH_BYTES + HPCC_SIZE,
+		.offset = {
+			[RXE_BTH] = 0,
+			[RXE_AETH] = RXE_BTH_BYTES,
+			[RXE_HPCC_HEADER] = RXE_BTH_BYTES + RXE_AETH_BYTES,
+			[RXE_PAYLOAD] = RXE_BTH_BYTES
+						+ RXE_AETH_BYTES + HPCC_SIZE,
 		}
 	},
 #else

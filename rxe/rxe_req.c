@@ -737,6 +737,8 @@ next_wqe:
 	timely_send_check(qp, &pkt, payload);
 #elif defined(RXE_USE_DCQCN_ALGO)
 	dcqcn_send_check(qp, &pkt, payload);
+#elif defined(RXE_USE_HPCC_ALGO)
+	hpcc_send_check(qp, &pkt, payload);
 #endif
 
 	ret = rxe_xmit_packet(qp, &pkt, skb);

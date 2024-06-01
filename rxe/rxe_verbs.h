@@ -278,6 +278,13 @@ struct rxe_qp {
 	uint64_t dcqcn_bc;
 	uint64_t dcqcn_rt;
 	uint64_t dcqcn_A;
+
+	// used for HPCC algorithm
+	uint64_t hpcc_window;
+	uint64_t hpcc_flying_bytes;
+	uint64_t hpcc_seq;
+	uint64_t hpcc_last_update_seq;
+	uint64_t hpcc_B;
 };
 
 enum rxe_mr_state {

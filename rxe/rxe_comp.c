@@ -286,6 +286,9 @@ static inline enum comp_state check_ack(struct rxe_qp *qp,
 #elif defined(RXE_USE_DCQCN_ALGO)
 			//used for dcqcn algorithm
 			dcqcn_recv_ack(qp, pkt);
+#elif defined(RXE_USE_HPCC_ALGO)
+			// used for hpcc algorithm
+			hpcc_recv_ack(qp, pkt);
 #endif
 			return COMPST_WRITE_SEND;
 
