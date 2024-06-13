@@ -292,6 +292,7 @@ struct rxe_qp {
 	uint64_t hpcc_ts;
 	uint64_t hpcc_U;
 	uint64_t hpcc_inc_stage;
+	uint64_t hpcc_ts_carry;
 };
 
 enum rxe_mr_state {

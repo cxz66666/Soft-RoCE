@@ -355,14 +355,15 @@ int rxe_qp_from_init(struct rxe_dev *rxe, struct rxe_qp *qp, struct rxe_pd *pd,
 
 #ifdef RXE_USE_TIMELY_ALGO
 	// added for timely 
-	qp->timely_rate = 11500;
+	qp->timely_rate = 3200;
 	qp->timely_timer = 0;
+	qp->timely_prev_rtt = TIMELY_MINRTT;
 	qp->timely_rtt_diff = 0;
 #elif defined(RXE_USE_DCQCN_ALGO)
-	qp->dcqcn_rate = 11500;
-	qp->dcqcn_rt = 11500;
+	qp->dcqcn_rate = 1250;
+	qp->dcqcn_rt = 1250;
 	// TODO warning
-	qp->dcqcn_A = 256;
+	qp->dcqcn_A = 25600;
 	qp->dcqcn_timer = 0;
 	qp->dcqcn_now_time = 0;
 	qp->dcqcn_last_time = 0;
@@ -371,7 +372,7 @@ int rxe_qp_from_init(struct rxe_dev *rxe, struct rxe_qp *qp, struct rxe_pd *pd,
 	qp->dcqcn_byte_count = 0;
 #elif defined(RXE_USE_HPCC_ALGO)
 	qp->hpcc_window = 6174;
-	qp->hpcc_B = 11500;
+	qp->hpcc_B = 1250;
 	qp->hpcc_flying_bytes = 0;
 	qp->hpcc_last_update_seq = 0;
 	qp->hpcc_seq = 0;
@@ -380,6 +381,7 @@ int rxe_qp_from_init(struct rxe_dev *rxe, struct rxe_qp *qp, struct rxe_pd *pd,
 	qp->hpcc_ts = 0;
 	qp->hpcc_U = 10000;
 	qp->hpcc_inc_stage = 0;
+	qp->hpcc_ts_carry = 0;
 #endif 
 	return 0;
 
