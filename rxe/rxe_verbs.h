@@ -266,7 +266,9 @@ struct rxe_qp {
 	// used for timely algorithm
 	uint64_t timely_rate;
 	uint64_t timely_timer;
-	uint64_t timely_rtt_diff;
+	uint64_t timely_prev_rtt;
+	int64_t timely_rtt_diff;
+
 
 	//used for DCQCN algorithm
 	uint64_t dcqcn_rate;

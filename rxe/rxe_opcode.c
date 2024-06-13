@@ -7,6 +7,7 @@
 #include <rdma/ib_pack.h>
 #include "rxe_opcode.h"
 #include "rxe_hdr.h"
+#include "cc_algo/cc_algo.h"
 
 #define TIMELY_TIMESTAMP_SIZE 8
 #define DCQCN_ECN_SIZE 4

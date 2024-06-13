@@ -32,6 +32,18 @@
 #include "rxe_loc.h"
 
 #include "cc_algo/cc_algo.h"
+#ifdef RXE_USE_TIMELY_ALGO
+#include "cc_algo/timely.h"
+#endif
+
+#ifdef RXE_USE_DCQCN_ALGO
+#include "cc_algo/dcqcn.h"
+#endif
+
+#ifdef RXE_USE_HPCC_ALGO
+#include "cc_algo/hpcc.h"
+#endif
+
 
  /*
   * Version 1 and Version 2 are identical on 64 bit machines, but on 32 bit
