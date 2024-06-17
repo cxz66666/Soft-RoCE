@@ -371,9 +371,9 @@ int rxe_qp_from_init(struct rxe_dev *rxe, struct rxe_qp *qp, struct rxe_pd *pd,
 	qp->dcqcn_t = 0;
 	qp->dcqcn_byte_count = 0;
 #elif defined(RXE_USE_HPCC_ALGO)
-	qp->hpcc_window = 6174;
+	atomic64_set(&qp->hpcc_window, 62574);
 	qp->hpcc_B = 1250;
-	qp->hpcc_flying_bytes = 0;
+	atomic64_set(&qp->hpcc_flying_bytes, 0);
 	qp->hpcc_last_update_seq = 0;
 	qp->hpcc_seq = 0;
 	qp->hpcc_txbyte = 0;
@@ -729,6 +729,29 @@ int rxe_qp_from_attr(struct rxe_qp *qp, struct ib_qp_attr *attr, int mask,
 		case IB_QPS_RTR:
 			pr_debug("qp#%d state -> RTR\n", qp_num(qp));
 			qp->resp.state = QP_STATE_READY;
+#ifdef RXE_USE_HPCC_ALGO
+			{
+				// struct rxe_av *av = &qp->pri_av;
+				// if (av == NULL) {
+				// 	pr_warn("qp#%d: av is NULL\n", qp_num(qp));
+				// 	break;
+				// } else {
+					// uint32_t s_addr = ntohl(av->sgid_addr._sockaddr_in.sin_addr.s_addr);
+					// uint32_t d_addr = ntohl(av->dgid_addr._sockaddr_in.sin_addr.s_addr);
+					// if (qp->attr.dest_qp_num > 16 && qp->attr.dest_qp_num < 41) {
+					// 	qp->src_port = generate_rss_src_port(s_addr, d_addr, (qp->attr.dest_qp_num - 17) + 24);
+					// 	pr_info("remote qpn %u use rss src port %u to bind %d\n", qp->attr.dest_qp_num, qp->src_port, (qp->attr.dest_qp_num - 17) + 24);
+					// } else {
+					// 	pr_info("remote qpn %u not in rss range\n", qp->attr.dest_qp_num);
+					// }
+					// pr_info("qp#%d: remote_qp#%d, RTR: src_ip=%d.%d.%d.%d, dst_ip=%d.%d.%d.%d, src_port=%d, dst_port=%d\n",
+					// 	qp_num(qp), qp->attr.dest_qp_num,
+					// 	(s_addr >> 24) & 0xff, (s_addr >> 16) & 0xff, (s_addr >> 8) & 0xff, s_addr & 0xff,
+					// 	(d_addr >> 24) & 0xff, (d_addr >> 16) & 0xff, (d_addr >> 8) & 0xff, d_addr & 0xff,
+					// 	src_port, dst_port);
+				// }
+			}
+#endif
 			break;
 
 		case IB_QPS_RTS:

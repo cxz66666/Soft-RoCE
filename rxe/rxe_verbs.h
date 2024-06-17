@@ -13,6 +13,7 @@
 #include "rxe_pool.h"
 #include "rxe_task.h"
 #include "rxe_hw_counters.h"
+#include <linux/atomic.h>
 
 static inline int pkey_match(u16 key1, u16 key2) {
 	return (((key1 & 0x7fff) != 0) &&
@@ -282,8 +283,8 @@ struct rxe_qp {
 	uint64_t dcqcn_A;
 
 	// used for HPCC algorithm
-	uint64_t hpcc_window;
-	uint64_t hpcc_flying_bytes;
+	atomic64_t hpcc_window;
+	atomic64_t hpcc_flying_bytes;
 	uint64_t hpcc_seq;
 	uint64_t hpcc_last_update_seq;
 	uint64_t hpcc_B;
